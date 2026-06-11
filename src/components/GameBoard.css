@@ -10,6 +10,16 @@
   height: 100% !important;
 }
 
+.scene-loader--overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1410;
+  z-index: 10;
+}
+
 .scene-loader {
   padding: 1rem 1.5rem;
   background: rgba(0, 0, 0, 0.75);

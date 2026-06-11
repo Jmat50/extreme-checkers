@@ -15,12 +15,6 @@ import { boardMaterial, redMaterial, blackMaterial } from './materials';
 import { HDRI_STUDIO, MODEL } from './modelPaths';
 import { BombMarker } from './BombMarker';
 
-useGLTF.preload(MODEL.board);
-useGLTF.preload(MODEL.pieceRed);
-useGLTF.preload(MODEL.pieceBlack);
-useGLTF.preload(MODEL.pieceRedKing);
-useGLTF.preload(MODEL.pieceBlackKing);
-
 interface BoardSceneProps {
   G: CheckersState;
   onSelectSquare: (row: number, col: number) => void;

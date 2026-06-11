@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import type { BoardProps } from 'boardgame.io/react';
 import { CheckersState } from '../game/types';
@@ -6,6 +6,7 @@ import { BoardScene } from '../scene/BoardScene';
 import { GameUI } from './GameUI';
 import { SceneLoader } from './SceneLoader';
 import { ErrorBoundary } from './ErrorBoundary';
+import { preloadGameAssets } from '../scene/preloadAssets';
 import { useSound } from '../hooks/useSound';
 import type { GameMode } from './Lobby';
 import './GameBoard.css';
@@ -29,6 +30,26 @@ export function GameBoard({
 }: GameBoardProps) {
   const { playMove, playCapture, playKing, playWin } = useSound();
   const lastMoveRef = useRef(G.lastMove);
+  const [assetsReady, setAssetsReady] = useState(false);
+  const [assetError, setAssetError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAssetsReady(false);
+    setAssetError(null);
+    preloadGameAssets()
+      .then(() => {
+        if (!cancelled) setAssetsReady(true);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setAssetError(error instanceof Error ? error.message : 'Failed to load 3D models');
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (G.lastMove === lastMoveRef.current) return;
@@ -69,13 +90,37 @@ export function GameBoard({
         mode={mode}
         onLeave={onLeave}
       />
-      <ErrorBoundary>
-        <Canvas shadows camera={{ position: [0, 9, 9], fov: 45 }}>
-          <Suspense fallback={<SceneLoader />}>
-            <BoardScene G={G} onSelectSquare={handleSelect} interactive={interactive} />
-          </Suspense>
-        </Canvas>
-      </ErrorBoundary>
+      {assetError ? (
+        <div className="error-fallback">
+          <h2>Could not load 3D models</h2>
+          <p>{assetError}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setAssetError(null);
+              preloadGameAssets()
+                .then(() => setAssetsReady(true))
+                .catch((error: unknown) => {
+                  setAssetError(error instanceof Error ? error.message : 'Failed to load 3D models');
+                });
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      ) : !assetsReady ? (
+        <div className="scene-loader scene-loader--overlay">
+          <p>Loading board…</p>
+        </div>
+      ) : (
+        <ErrorBoundary>
+          <Canvas shadows camera={{ position: [0, 9, 9], fov: 45 }}>
+            <Suspense fallback={<SceneLoader />}>
+              <BoardScene G={G} onSelectSquare={handleSelect} interactive={interactive} />
+            </Suspense>
+          </Canvas>
+        </ErrorBoundary>
+      )}
     </div>
   );
 }

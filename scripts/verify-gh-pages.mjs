@@ -33,6 +33,8 @@ if (!js.includes('/extreme-checkers/') || !js.includes('models/board.glb')) {
 const required = [
   'models/board.glb',
   'models/piece-red.glb',
+  'models/piece-red-king.glb',
+  'models/piece-black-king.glb',
   'hdri/studio.hdr',
   'textures/board/CheckerBoard_Board_BaseColor.png',
   'icons/bomb.png',
