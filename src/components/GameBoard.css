@@ -1,0 +1,11 @@
+.game-board {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+.game-board canvas {
+  width: 100% !important;
+  height: 100% !important;
+}

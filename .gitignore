@@ -1,0 +1,8 @@
+node_modules
+dist
+storage
+.DS_Store
+*.local
+*.tsbuildinfo
+$tmp/
+$tmpdir/

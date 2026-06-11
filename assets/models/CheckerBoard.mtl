@@ -1,0 +1,44 @@
+# Blender MTL File: 'CheckerBoard.blend'
+# Material Count: 3
+
+newmtl Black
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump textures\\Black\\CheckerBoard_Black_Normal.png
+map_Kd textures\\Black\\CheckerBoard_Black_BaseColor.png
+map_Ns textures\\Black\\CheckerBoard_Black_Roughness.png
+refl textures\\Black\\CheckerBoard_Black_Metallic.png
+
+newmtl Board
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump textures\\Board\\CheckerBoard_Board_Normal.png
+map_Kd textures\\Board\\CheckerBoard_Board_BaseColor.png
+map_Ns textures\\Board\\CheckerBoard_Board_Roughness.png
+refl textures\\Board\\CheckerBoard_Board_Metallic.png
+
+newmtl Red
+Ns 250.000000
+Ka 1.000000 1.000000 1.000000
+Kd 0.800000 0.800000 0.800000
+Ks 0.500000 0.500000 0.500000
+Ke 0.000000 0.000000 0.000000
+Ni 1.450000
+d 1.000000
+illum 2
+map_Bump textures\\Red\\CheckerBoard_Red_Normal.png
+map_Kd textures\\Red\\CheckerBoard_Red_BaseColor.png
+map_Ns textures\\Red\\CheckerBoard_Red_Roughness.png
+refl textures\\Red\\CheckerBoard_Red_Metallic.png

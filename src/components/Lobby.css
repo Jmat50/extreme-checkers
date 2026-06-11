@@ -1,0 +1,131 @@
+.lobby {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #2a1f18 0%, #0d0a08 70%);
+  padding: 2rem;
+}
+
+.lobby-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 2.5rem;
+  background: rgba(20, 15, 12, 0.92);
+  border: 1px solid rgba(245, 230, 211, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.lobby-card h1 {
+  margin: 0 0 0.4rem;
+  font-size: 2rem;
+  color: #f5e6d3;
+  text-align: center;
+}
+
+.subtitle {
+  margin: 0 0 2rem;
+  text-align: center;
+  color: rgba(245, 230, 211, 0.55);
+  font-size: 0.9rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1.2rem;
+}
+
+.field span {
+  font-size: 0.8rem;
+  color: rgba(245, 230, 211, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.field input {
+  padding: 0.65rem 0.85rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(245, 230, 211, 0.15);
+  border-radius: 8px;
+  color: #f5e6d3;
+  font-size: 1rem;
+}
+
+.field input:focus {
+  outline: none;
+  border-color: rgba(245, 230, 211, 0.35);
+}
+
+.lobby-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-bottom: 1.5rem;
+}
+
+.btn-primary {
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #8b4513 0%, #5c2e0a 100%);
+  border: 1px solid rgba(245, 230, 211, 0.2);
+  border-radius: 8px;
+  color: #f5e6d3;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(139, 69, 19, 0.4);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.join-section {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(245, 230, 211, 0.1);
+}
+
+.join-section .field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.btn-secondary {
+  padding: 0.65rem 1rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(245, 230, 211, 0.2);
+  border-radius: 8px;
+  color: #f5e6d3;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.error {
+  color: #ff6b6b;
+  font-size: 0.85rem;
+  margin: 0 0 1rem;
+}
+
+.match-code {
+  margin-top: 1rem;
+  text-align: center;
+  color: rgba(245, 230, 211, 0.7);
+  font-size: 0.9rem;
+}
+
+.match-code strong {
+  color: #ffd700;
+  font-size: 1.2rem;
+  letter-spacing: 0.15em;
+}
