@@ -166,8 +166,7 @@ export function pickAiMove(G: CheckersState, color: PieceColor): Move | null {
     score += (move.captures?.length ?? 0) * 10;
     const result = executeMove(G, move);
     const piece = result.board[move.to.row][move.to.col];
-    if (piece?.king && !G.board[move.from.row][move.from.col]?.king) score += 5;
-    if (move.to.row === 0 || move.to.row === 7) score += 2;
+    if (!piece) score -= 50;
     score += Math.random() * 0.5;
     return { move, score };
   });
