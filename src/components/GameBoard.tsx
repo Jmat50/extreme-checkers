@@ -4,6 +4,8 @@ import type { BoardProps } from 'boardgame.io/react';
 import { CheckersState } from '../game/types';
 import { BoardScene } from '../scene/BoardScene';
 import { GameUI } from './GameUI';
+import { SceneLoader } from './SceneLoader';
+import { ErrorBoundary } from './ErrorBoundary';
 import { useSound } from '../hooks/useSound';
 import type { GameMode } from './Lobby';
 import './GameBoard.css';
@@ -67,11 +69,13 @@ export function GameBoard({
         mode={mode}
         onLeave={onLeave}
       />
-      <Canvas shadows camera={{ position: [0, 9, 9], fov: 45 }}>
-        <Suspense fallback={null}>
-          <BoardScene G={G} onSelectSquare={handleSelect} interactive={interactive} />
-        </Suspense>
-      </Canvas>
+      <ErrorBoundary>
+        <Canvas shadows camera={{ position: [0, 9, 9], fov: 45 }}>
+          <Suspense fallback={<SceneLoader />}>
+            <BoardScene G={G} onSelectSquare={handleSelect} interactive={interactive} />
+          </Suspense>
+        </Canvas>
+      </ErrorBoundary>
     </div>
   );
 }

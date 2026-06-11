@@ -12,12 +12,13 @@ import { CheckersState, Move, BOARD_SIZE } from '../game/types';
 import { isEdgeSquare, isDarkSquare } from '../game/logic';
 import { gridToWorld, worldToGrid } from './boardCoords';
 import { boardMaterial, redMaterial, blackMaterial } from './materials';
+import { HDRI_STUDIO, MODEL } from './modelPaths';
 
-useGLTF.preload('/models/board.glb');
-useGLTF.preload('/models/piece-red.glb');
-useGLTF.preload('/models/piece-black.glb');
-useGLTF.preload('/models/piece-red-king.glb');
-useGLTF.preload('/models/piece-black-king.glb');
+useGLTF.preload(MODEL.board);
+useGLTF.preload(MODEL.pieceRed);
+useGLTF.preload(MODEL.pieceBlack);
+useGLTF.preload(MODEL.pieceRedKing);
+useGLTF.preload(MODEL.pieceBlackKing);
 
 interface BoardSceneProps {
   G: CheckersState;
@@ -44,11 +45,11 @@ function AnimatedPiece({
   const [target, setTarget] = useState(() => new THREE.Vector3(...gridToWorld(row, col)));
   const modelPath = king
     ? color === 'red'
-      ? '/models/piece-red-king.glb'
-      : '/models/piece-black-king.glb'
+      ? MODEL.pieceRedKing
+      : MODEL.pieceBlackKing
     : color === 'red'
-      ? '/models/piece-red.glb'
-      : '/models/piece-black.glb';
+      ? MODEL.pieceRed
+      : MODEL.pieceBlack;
   const { scene } = useGLTF(modelPath);
   const material = color === 'red' ? redMaterial : blackMaterial;
 
@@ -101,7 +102,7 @@ function HighlightSquare({ row, col, color }: { row: number; col: number; color:
 }
 
 function BoardMesh({ onPointerDown }: { onPointerDown: (e: ThreeEvent<PointerEvent>) => void }) {
-  const { scene } = useGLTF('/models/board.glb');
+  const { scene } = useGLTF(MODEL.board);
   const board = useMemo(() => {
     const c = scene.clone(true);
     c.traverse((child) => {
@@ -149,7 +150,7 @@ export function BoardScene({ G, onSelectSquare, interactive }: BoardSceneProps) 
         castShadow
         shadow-mapSize={[2048, 2048]}
       />
-      <Environment files="/hdri/studio.hdr" background={false} />
+      <Environment files={HDRI_STUDIO} background={false} />
       <OrbitControls
         makeDefault
         minPolarAngle={0.3}
