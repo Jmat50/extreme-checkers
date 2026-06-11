@@ -7,6 +7,9 @@ import {
   PieceColor,
   Position,
 } from './types';
+import { isHazardSquare } from './hazards';
+
+export { isHazardSquare, HAZARD_SQUARES } from './hazards';
 
 /**
  * 5 pieces per side on dark squares: 3 on the 2nd row from home,
@@ -28,10 +31,6 @@ const START_BLACK: Position[] = [
   { row: 5, col: 2 },
   { row: 5, col: 4 },
 ];
-
-export function isEdgeSquare(row: number, col: number): boolean {
-  return row === 0 || row === BOARD_SIZE - 1 || col === 0 || col === BOARD_SIZE - 1;
-}
 
 export function createInitialBoard(): Cell[][] {
   const board: Cell[][] = Array.from({ length: BOARD_SIZE }, () =>
@@ -74,7 +73,7 @@ function moveDirs(): [number, number][] {
 }
 
 function placePiece(board: Cell[][], pos: Position, piece: Piece): void {
-  if (isEdgeSquare(pos.row, pos.col)) {
+  if (isHazardSquare(pos.row, pos.col)) {
     board[pos.row][pos.col] = null;
   } else {
     board[pos.row][pos.col] = { ...piece, king: true };

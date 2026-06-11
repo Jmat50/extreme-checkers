@@ -107,6 +107,11 @@
   pointer-events: none;
 }
 
+.hazard-hint {
+  background: rgba(255, 100, 50, 0.15);
+  color: #ffaa77;
+}
+
 .btn-secondary {
   padding: 0.45rem 1rem;
   background: rgba(255, 255, 255, 0.1);

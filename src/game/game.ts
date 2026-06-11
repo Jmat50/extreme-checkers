@@ -5,6 +5,7 @@ import {
   getAllMoves,
   getMovesForPiece,
   initialState,
+  isHazardSquare,
   movesEqual,
 } from './logic';
 
@@ -167,6 +168,7 @@ export function pickAiMove(G: CheckersState, color: PieceColor): Move | null {
     const result = executeMove(G, move);
     const piece = result.board[move.to.row][move.to.col];
     if (!piece) score -= 50;
+    if (isHazardSquare(move.to.row, move.to.col)) score -= 40;
     score += Math.random() * 0.5;
     return { move, score };
   });

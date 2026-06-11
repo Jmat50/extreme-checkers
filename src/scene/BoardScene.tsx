@@ -8,11 +8,12 @@ import {
 } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { CheckersState, Move, BOARD_SIZE } from '../game/types';
-import { isEdgeSquare, isDarkSquare } from '../game/logic';
+import { CheckersState, Move } from '../game/types';
+import { HAZARD_SQUARES } from '../game/logic';
 import { gridToWorld, worldToGrid } from './boardCoords';
 import { boardMaterial, redMaterial, blackMaterial } from './materials';
 import { HDRI_STUDIO, MODEL } from './modelPaths';
+import { BombMarker } from './BombMarker';
 
 useGLTF.preload(MODEL.board);
 useGLTF.preload(MODEL.pieceRed);
@@ -174,19 +175,9 @@ export function BoardScene({ G, onSelectSquare, interactive }: BoardSceneProps) 
         <HighlightSquare key={`${m.to.row},${m.to.col}`} row={m.to.row} col={m.to.col} color="#44ff88" />
       ))}
 
-      {Array.from({ length: BOARD_SIZE }, (_, row) =>
-        Array.from({ length: BOARD_SIZE }, (_, col) => {
-          if (!isDarkSquare(row, col) || !isEdgeSquare(row, col)) return null;
-          return (
-            <HighlightSquare
-              key={`edge-${row}-${col}`}
-              row={row}
-              col={col}
-              color="#ff4444"
-            />
-          );
-        }),
-      )}
+      {HAZARD_SQUARES.map(({ row, col }) => (
+        <BombMarker key={`bomb-${row}-${col}`} row={row} col={col} />
+      ))}
 
       {G.board.map((row, r) =>
         row.map((cell, c) => {

@@ -35,6 +35,7 @@ const required = [
   'models/piece-red.glb',
   'hdri/studio.hdr',
   'textures/board/CheckerBoard_Board_BaseColor.png',
+  'icons/bomb.png',
 ];
 
 for (const asset of required) {

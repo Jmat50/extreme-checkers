@@ -66,6 +66,9 @@ export function GameUI({
       {G.mustContinueFrom && isMyTurn && (
         <div className="hint-banner">Continue your capture!</div>
       )}
+      {!G.winner && !d && (
+        <div className="hint-banner hazard-hint">Bomb squares eliminate any piece that lands on them.</div>
+      )}
     </div>
   );
 }
