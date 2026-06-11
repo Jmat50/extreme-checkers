@@ -10,10 +10,12 @@ import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { CheckersState, Move } from '../game/types';
 import { HAZARD_SQUARES } from '../game/logic';
-import { gridToWorld, worldToGrid } from './boardCoords';
+import { gridToWorld, worldToGrid, SURFACE_EPSILON } from './boardCoords';
 import { boardMaterial, redMaterial, blackMaterial } from './materials';
 import { HDRI_STUDIO, MODEL } from './modelPaths';
 import { BombMarker } from './BombMarker';
+import { ExplosionBurst } from './ExplosionBurst';
+import { useExplosionBursts } from '../hooks/useExplosionBursts';
 
 interface BoardSceneProps {
   G: CheckersState;
@@ -87,9 +89,9 @@ function AnimatedPiece({
 }
 
 function HighlightSquare({ row, col, color }: { row: number; col: number; color: string }) {
-  const [x, , z] = gridToWorld(row, col);
+  const [x, y, z] = gridToWorld(row, col);
   return (
-    <mesh position={[x, 0.06, z]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh position={[x, y + SURFACE_EPSILON, z]} rotation={[-Math.PI / 2, 0, 0]}>
       <planeGeometry args={[0.85, 0.85]} />
       <meshBasicMaterial color={color} transparent opacity={0.45} />
     </mesh>
@@ -117,7 +119,7 @@ function BoardMesh({ onPointerDown }: { onPointerDown: (e: ThreeEvent<PointerEve
 
 function Table() {
   return (
-    <mesh position={[0, -0.12, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+    <mesh position={[0, -0.02, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
       <planeGeometry args={[14, 14]} />
       <meshStandardMaterial color="#3d2b1f" roughness={0.85} metalness={0.05} />
     </mesh>
@@ -126,6 +128,7 @@ function Table() {
 
 export function BoardScene({ G, onSelectSquare, interactive }: BoardSceneProps) {
   const validTargets = new Set(G.validMoves.map((m: Move) => `${m.to.row},${m.to.col}`));
+  const { bursts, removeBurst } = useExplosionBursts(G.eliminationFlash, G.lastEliminations);
 
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     if (!interactive) return;
@@ -156,7 +159,7 @@ export function BoardScene({ G, onSelectSquare, interactive }: BoardSceneProps) 
       />
       <Table />
       <BoardMesh onPointerDown={handlePointerDown} />
-      <ContactShadows position={[0, -0.11, 0]} opacity={0.5} scale={12} blur={2} />
+      <ContactShadows position={[0, -0.02, 0]} opacity={0.5} scale={12} blur={2} />
 
       {G.selected && (
         <HighlightSquare
@@ -171,6 +174,15 @@ export function BoardScene({ G, onSelectSquare, interactive }: BoardSceneProps) 
 
       {HAZARD_SQUARES.map(({ row, col }) => (
         <BombMarker key={`bomb-${row}-${col}`} row={row} col={col} />
+      ))}
+
+      {bursts.map((burst) => (
+        <ExplosionBurst
+          key={burst.id}
+          row={burst.row}
+          col={burst.col}
+          onComplete={() => removeBurst(burst.id)}
+        />
       ))}
 
       {G.board.map((row, r) =>

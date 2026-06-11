@@ -49,11 +49,26 @@ function findMesh(group: Object3D, predicate: (name: string) => boolean): Object
   return found;
 }
 
-function cloneMesh(mesh: Object3D): Object3D {
-  const clone = mesh.clone(true);
+/** Square top height from CheckerBoard.obj — the surface pieces sit on. */
+const PLAYING_SURFACE_Y = 0.26343;
+
+function cloneBoard(board: Object3D): Object3D {
+  const clone = board.clone(true);
   const box = new Box3().setFromObject(clone);
   const center = box.getCenter(new Vector3());
-  clone.position.sub(center);
+  clone.position.x -= center.x;
+  clone.position.z -= center.z;
+  clone.position.y -= PLAYING_SURFACE_Y;
+  return clone;
+}
+
+function clonePiece(piece: Object3D): Object3D {
+  const clone = piece.clone(true);
+  const box = new Box3().setFromObject(clone);
+  const center = box.getCenter(new Vector3());
+  clone.position.x -= center.x;
+  clone.position.z -= center.z;
+  clone.position.y -= box.min.y;
   return clone;
 }
 
@@ -76,7 +91,7 @@ function exportGlb(object: Object3D, filename: string): Promise<void> {
 
 function createKingPiece(basePiece: Object3D, color: 'red' | 'black'): Object3D {
   const group = new Group();
-  const piece = cloneMesh(basePiece);
+  const piece = clonePiece(basePiece);
   group.add(piece);
 
   const crownMat = new MeshStandardMaterial({
@@ -118,9 +133,9 @@ async function main() {
     throw new Error('Could not find board or piece meshes in FBX');
   }
 
-  await exportGlb(cloneMesh(board), 'board.glb');
-  await exportGlb(cloneMesh(redPiece), 'piece-red.glb');
-  await exportGlb(cloneMesh(blackPiece), 'piece-black.glb');
+  await exportGlb(cloneBoard(board), 'board.glb');
+  await exportGlb(clonePiece(redPiece), 'piece-red.glb');
+  await exportGlb(clonePiece(blackPiece), 'piece-black.glb');
   await exportGlb(createKingPiece(redPiece, 'red'), 'piece-red-king.glb');
   await exportGlb(createKingPiece(blackPiece, 'black'), 'piece-black-king.glb');
 

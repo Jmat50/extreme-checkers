@@ -8,6 +8,7 @@ import {
   Position,
 } from './types';
 import { isHazardSquare } from './hazards';
+import { getEliminationSites } from './eliminations';
 
 export { isHazardSquare, HAZARD_SQUARES } from './hazards';
 
@@ -235,6 +236,7 @@ export function executeMove(state: CheckersState, move: Move): CheckersState {
   }
 
   const winner = findWinner(board);
+  const eliminations = getEliminationSites(move);
   return {
     board,
     selected: mustContinueFrom,
@@ -244,6 +246,8 @@ export function executeMove(state: CheckersState, move: Move): CheckersState {
     mustContinueFrom,
     winner,
     lastMove: move,
+    eliminationFlash: eliminations.length > 0 ? state.eliminationFlash + 1 : state.eliminationFlash,
+    lastEliminations: eliminations,
   };
 }
 
@@ -255,5 +259,7 @@ export function initialState(): CheckersState {
     mustContinueFrom: null,
     winner: null,
     lastMove: null,
+    eliminationFlash: 0,
+    lastEliminations: [],
   };
 }

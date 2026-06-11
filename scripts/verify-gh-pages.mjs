@@ -38,6 +38,7 @@ const required = [
   'hdri/studio.hdr',
   'textures/board/CheckerBoard_Board_BaseColor.png',
   'icons/bomb.png',
+  'vfx/explosion.mp4',
 ];
 
 for (const asset of required) {

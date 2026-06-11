@@ -1,5 +1,5 @@
 import { Game } from 'boardgame.io';
-import { CheckersState, Move, PLAYER_COLORS, PieceColor } from './types';
+import { CheckersState, Move, PLAYER_COLORS, PieceColor, Position } from './types';
 import {
   executeMove,
   getAllMoves,
@@ -146,16 +146,28 @@ export const CheckersGame: Game<CheckersState> = {
 
 export function applyAiMove(G: CheckersState, move: Move): CheckersState {
   let state: CheckersState = { ...G, selected: move.from, validMoves: [move] };
+  const allEliminations: Position[] = [];
+
   state = executeMove(state, move);
-  if (state.mustContinueFrom) {
+  allEliminations.push(...state.lastEliminations);
+
+  while (state.mustContinueFrom) {
     const followUps = getMovesForPiece(state.board, state.mustContinueFrom).filter(
       (m) => m.captures?.length,
     );
-    if (followUps.length > 0) {
-      return applyAiMove(state, followUps[0]);
-    }
+    if (followUps.length === 0) break;
+    state = executeMove(state, followUps[0]);
+    allEliminations.push(...state.lastEliminations);
   }
-  return { ...state, selected: null, validMoves: [], mustContinueFrom: null };
+
+  return {
+    ...state,
+    selected: null,
+    validMoves: [],
+    mustContinueFrom: null,
+    lastEliminations: allEliminations,
+    eliminationFlash: allEliminations.length > 0 ? G.eliminationFlash + 1 : G.eliminationFlash,
+  };
 }
 
 export function pickAiMove(G: CheckersState, color: PieceColor): Move | null {

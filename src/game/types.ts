@@ -25,6 +25,9 @@ export interface CheckersState {
   mustContinueFrom: Position | null;
   winner: PieceColor | null;
   lastMove: Move | null;
+  /** Increments whenever pieces are eliminated (captures / bombs). */
+  eliminationFlash: number;
+  lastEliminations: Position[];
 }
 
 export const BOARD_SIZE = 8;

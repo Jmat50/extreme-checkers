@@ -32,6 +32,7 @@ Source assets live in `assets/` (extracted from checker-board.zip). Web-ready GL
 ### Art & models
 
 - <a href="https://www.vecteezy.com/free-vector/bomb-icon">Bomb Icon Vectors by Vecteezy</a> (hazard square markers; source EPS in `assets/icons/bomb-source.eps`)
+- <a href="https://www.videezy.com/elements-and-effects/614-explosion">Explosion by Videezy</a> (piece elimination burst VFX; web copy in `public/vfx/explosion.mp4`)
 - ["Checker Board"](https://skfb.ly/oLTyV) by AnshiNoWara NG+ is licensed under [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/) (board and piece meshes / PBR textures)
 
 ### Environment

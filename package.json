@@ -10,6 +10,7 @@
     "server": "tsx server/index.ts",
     "dev:all": "concurrently \"npm run server\" \"npm run dev\"",
     "convert-models": "tsx scripts/convert-models.ts",
+    "convert-explosion": "node scripts/convert-explosion.mjs",
     "build:gh": "cross-env BASE_PATH=/extreme-checkers/ npm run build",
     "verify:gh": "node scripts/verify-gh-pages.mjs",
     "test:gh": "npm run build:gh && npm run verify:gh"
@@ -28,6 +29,7 @@
     "three": "^0.170.0"
   },
   "devDependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@types/node": "^22.10.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
