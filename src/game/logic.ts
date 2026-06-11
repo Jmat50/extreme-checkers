@@ -8,21 +8,25 @@ import {
   Position,
 } from './types';
 
-/** 3 on the home row + 2 on the row behind, centered on dark squares. */
-const START_BLACK: Position[] = [
-  { row: 0, col: 1 },
-  { row: 0, col: 3 },
-  { row: 0, col: 5 },
+/**
+ * 5 pieces per side on dark squares: 3 on the 2nd row from home,
+ * 2 on the 3rd row from home (matches circled start positions).
+ * Red = top (rows 1–2), Black = bottom (rows 5–6).
+ */
+const START_RED: Position[] = [
   { row: 1, col: 2 },
   { row: 1, col: 4 },
+  { row: 1, col: 6 },
+  { row: 2, col: 1 },
+  { row: 2, col: 3 },
 ];
 
-const START_RED: Position[] = [
-  { row: 7, col: 2 },
-  { row: 7, col: 4 },
-  { row: 7, col: 6 },
+const START_BLACK: Position[] = [
   { row: 6, col: 1 },
   { row: 6, col: 3 },
+  { row: 6, col: 5 },
+  { row: 5, col: 2 },
+  { row: 5, col: 4 },
 ];
 
 export function isEdgeSquare(row: number, col: number): boolean {
