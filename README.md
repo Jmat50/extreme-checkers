@@ -4,7 +4,26 @@
 
 **Live demo:** https://jmat50.github.io/extreme-checkers/
 
-> Local 2-player and vs AI work on the live demo. Online multiplayer requires running the game server locally.
+| Mode | GitHub Pages demo |
+|------|-------------------|
+| Local 2-player | Yes |
+| vs AI | Yes |
+| Online multiplayer | Yes — via [Render](https://render.com) game server ([setup guide](docs/DEPLOYMENT.md)) |
+
+## Deployment (GitHub Pages + Render)
+
+The live demo is split across two free hosts:
+
+- **Client** — GitHub Pages (this repo’s Actions workflow)
+- **Server** — Render free web service (`npm run start:server`)
+
+Full step-by-step instructions: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+
+Quick checklist:
+
+1. Deploy [`render.yaml`](render.yaml) on Render → copy service URL
+2. Set GitHub repo variable `GAME_SERVER_URL` to that URL (no trailing slash)
+3. Push to `main` — Pages rebuild picks up the server URL
 
 ## Windows visual editor
 
@@ -41,11 +60,15 @@ npm run dev:all          # starts game server + Vite client
 - Client: http://localhost:5173
 - Server: http://localhost:8000
 
+Online multiplayer works locally without Render — the Vite dev server proxies `/api`, `/socket.io`, and `/games` to port 8000.
+
+Optional: copy [`.env.example`](.env.example) to `.env.local` and set `VITE_GAME_SERVER_URL` to test the production client against your Render deployment.
+
 ## Modes
 
 - **Local 2-Player** — hot-seat on one machine
 - **Play vs AI** — offline with boardgame.io bot
-- **Create / Join Online** — multiplayer via Socket.IO
+- **Create / Join Online** — multiplayer via Socket.IO (Render in production, local server in dev)
 
 ## Assets
 
@@ -67,3 +90,4 @@ npm run dev:all          # starts game server + Vite client
 - [Vite](https://vitejs.dev/) — build tooling
 - [Socket.IO](https://socket.io/) — real-time transport (via boardgame.io client)
 - [Leva](https://github.com/pmndrs/leva) — editor control panel
+- [Render](https://render.com/) — free game server hosting for online play

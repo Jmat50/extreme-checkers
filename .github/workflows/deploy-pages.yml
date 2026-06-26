@@ -27,10 +27,17 @@ jobs:
 
       - run: npm ci
 
+      - name: Check Render game server URL
+        run: |
+          if [ -z "${{ vars.GAME_SERVER_URL }}" ]; then
+            echo "::warning::Repository variable GAME_SERVER_URL is not set. Online multiplayer will be disabled on GitHub Pages until you deploy Render and set it (see docs/DEPLOYMENT.md)."
+          fi
+
       - name: Build for GitHub Pages
         run: npm run test:gh
         env:
           BASE_PATH: /extreme-checkers/
+          VITE_GAME_SERVER_URL: ${{ vars.GAME_SERVER_URL }}
 
       - name: SPA fallback for client-side routing
         run: cp dist/index.html dist/404.html

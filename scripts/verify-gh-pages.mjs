@@ -50,3 +50,12 @@ for (const asset of required) {
 console.log('OK: GitHub Pages build paths verified');
 console.log(`  JS bundle: ${jsFile}`);
 console.log(`  Assets checked: ${required.length}`);
+const gameServerUrl = process.env.VITE_GAME_SERVER_URL?.trim();
+if (gameServerUrl) {
+  console.log(`  Game server URL: ${gameServerUrl}`);
+  if (!js.includes(gameServerUrl.replace(/^https?:\/\//, '').split('/')[0])) {
+    fail('JS bundle does not embed VITE_GAME_SERVER_URL');
+  }
+} else {
+  console.log('  Game server URL: (not set — online multiplayer disabled on Pages)');
+}

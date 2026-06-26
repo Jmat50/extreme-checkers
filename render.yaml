@@ -1,0 +1,19 @@
+# Render blueprint — deploy the boardgame.io multiplayer server (free web service).
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: extreme-checkers-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm ci
+    startCommand: npm run start:server
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        value: https://jmat50.github.io
+      - key: STORAGE_DIR
+        value: /tmp/extreme-checkers-storage

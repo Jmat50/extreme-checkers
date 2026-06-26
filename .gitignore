@@ -4,6 +4,8 @@ release
 storage
 .DS_Store
 *.local
+.env.local
+.env.*.local
 *.tsbuildinfo
 editor-stderr.log
 editor-stdout.log

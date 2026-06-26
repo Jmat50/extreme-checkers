@@ -6,6 +6,7 @@ import { CheckersBot } from './game/bot';
 import { GameBoard } from './components/GameBoard';
 import type { LobbyConfig } from './components/Lobby';
 import { CheckersState } from './game/types';
+import { getGameServerUrl } from './config/serverUrl';
 
 export function createGameClient(config: LobbyConfig) {
   const BoardWrapper = (props: BoardProps<CheckersState>) => (
@@ -24,7 +25,7 @@ export function createGameClient(config: LobbyConfig) {
     debug: false,
     multiplayer:
       config.mode === 'online'
-        ? SocketIO({ server: window.location.origin })
+        ? SocketIO({ server: getGameServerUrl() })
         : Local({
             bots: config.mode === 'ai' ? { '1': CheckersBot } : undefined,
           }),

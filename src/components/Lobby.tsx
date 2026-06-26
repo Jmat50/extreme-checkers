@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ASSETS_2D } from '../scene/assetPaths2d';
+import { apiUrl, isOnlineMultiplayerConfigured } from '../config/serverUrl';
 import './Lobby.css';
 
 export type GameMode = 'local' | 'online' | 'ai';
@@ -22,12 +23,13 @@ export function Lobby({ onStart }: LobbyProps) {
   const [joinID, setJoinID] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const onlineAvailable = isOnlineMultiplayerConfigured();
 
   const createOnline = async (vsAi: boolean) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch('/api/lobbies', {
+      const res = await fetch(apiUrl('/api/lobbies'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerName, vsAi }),
@@ -53,7 +55,7 @@ export function Lobby({ onStart }: LobbyProps) {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/lobbies/${joinID.trim().toUpperCase()}`, {
+      const res = await fetch(apiUrl(`/api/lobbies/${joinID.trim().toUpperCase()}`), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ playerName }),
@@ -81,6 +83,11 @@ export function Lobby({ onStart }: LobbyProps) {
       >
         <h1>Extreme Checkers</h1>
         <p className="subtitle">2D overhead checkers with online multiplayer</p>
+        {!onlineAvailable && (
+          <p className="online-hint">
+            Online play is not configured for this build. Local and vs AI still work.
+          </p>
+        )}
 
         <label className="field">
           <span>Your name</span>
@@ -117,7 +124,8 @@ export function Lobby({ onStart }: LobbyProps) {
             type="button"
             className="btn-primary"
             style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonPrimary})` }}
-            disabled={loading}
+            disabled={loading || !onlineAvailable}
+            title={onlineAvailable ? undefined : 'Deploy the Render game server and set GAME_SERVER_URL'}
             onClick={() => createOnline(false)}
           >
             Create Online Game
@@ -139,7 +147,8 @@ export function Lobby({ onStart }: LobbyProps) {
             type="button"
             className="btn-secondary"
             style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonSecondary})` }}
-            disabled={loading || !joinID.trim()}
+            disabled={loading || !joinID.trim() || !onlineAvailable}
+            title={onlineAvailable ? undefined : 'Deploy the Render game server and set GAME_SERVER_URL'}
             onClick={joinOnline}
           >
             Join Game
