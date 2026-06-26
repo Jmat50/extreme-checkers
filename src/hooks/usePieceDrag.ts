@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { Cell, Piece, PieceColor, Position } from '../game/types';
 import { getValidMovesForSelection } from '../game/logic';
 
@@ -9,6 +9,16 @@ export function clientToSquare(
   clientX: number,
   clientY: number,
 ): Position | null {
+  const hit = document.elementFromPoint(clientX, clientY);
+  const squareBtn = hit?.closest('button.board-square') as HTMLButtonElement | null;
+  if (squareBtn) {
+    const label = squareBtn.getAttribute('aria-label') ?? '';
+    const match = label.match(/Square (\d+), (\d+)/);
+    if (match) {
+      return { row: Number(match[1]) - 1, col: Number(match[2]) - 1 };
+    }
+  }
+
   const rect = boardEl.getBoundingClientRect();
   const relX = clientX - rect.left;
   const relY = clientY - rect.top;
@@ -18,10 +28,9 @@ export function clientToSquare(
   return { row, col };
 }
 
-interface DragSession {
+interface DragVisual {
   from: Position;
   piece: Piece;
-  pointerId: number;
   ghostX: number;
   ghostY: number;
   active: boolean;
@@ -37,6 +46,16 @@ interface UsePieceDragOptions {
   onSelectSquare: (row: number, col: number) => void;
 }
 
+type DragPointerLike = {
+  clientX: number;
+  clientY: number;
+  button: number;
+  pointerId: number;
+  currentTarget: EventTarget & HTMLElement;
+  preventDefault: () => void;
+  stopPropagation: () => void;
+};
+
 export function usePieceDrag({
   boardRef,
   board,
@@ -45,12 +64,13 @@ export function usePieceDrag({
   interactive,
   onSelectSquare,
 }: UsePieceDragOptions) {
-  const [drag, setDrag] = useState<DragSession | null>(null);
+  const [drag, setDrag] = useState<DragVisual | null>(null);
   const [hover, setHover] = useState<Position | null>(null);
-  const dragRef = useRef<DragSession | null>(null);
-  const originRef = useRef<{ x: number; y: number } | null>(null);
-
-  dragRef.current = drag;
+  const onSelectRef = useRef(onSelectSquare);
+  const activeDragPointerId = useRef<number | null>(null);
+  const hoverRef = useRef<Position | null>(null);
+  const wasActiveRef = useRef(false);
+  onSelectRef.current = onSelectSquare;
 
   const canDragPiece = useCallback(
     (row: number, col: number): boolean => {
@@ -71,9 +91,12 @@ export function usePieceDrag({
     [board, interactive, mustContinueFrom, playerColor],
   );
 
-  const handlePiecePointerDown = useCallback(
-    (row: number, col: number, e: React.PointerEvent) => {
+  const beginDrag = useCallback(
+    (row: number, col: number, e: DragPointerLike) => {
       if (!canDragPiece(row, col) || !playerColor) return;
+      if (e.button !== 0) return;
+      if (activeDragPointerId.current !== null) return;
+
       e.preventDefault();
       e.stopPropagation();
 
@@ -87,97 +110,144 @@ export function usePieceDrag({
       const validTargets = new Set(
         validMoves.map((m) => `${m.to.row},${m.to.col}`),
       );
+      const from = { row, col };
+      const origin = { x: e.clientX, y: e.clientY };
+      const targetEl = e.currentTarget;
+      let sessionOpen = true;
 
-      onSelectSquare(row, col);
-      originRef.current = { x: e.clientX, y: e.clientY };
+      onSelectRef.current(row, col);
+      activeDragPointerId.current = e.pointerId;
 
-      const session: DragSession = {
-        from: { row, col },
+      if (targetEl.setPointerCapture && 'pointerId' in e) {
+        try {
+          targetEl.setPointerCapture((e as DragPointerLike & { pointerId: number }).pointerId);
+        } catch {
+          // ignore
+        }
+      }
+
+      const visual: DragVisual = {
+        from,
         piece,
-        pointerId: e.pointerId,
         ghostX: e.clientX,
         ghostY: e.clientY,
         active: false,
         validTargets,
       };
-      setDrag(session);
-      setHover({ row, col });
+      setDrag(visual);
+      setHover(from);
+      hoverRef.current = from;
+      wasActiveRef.current = false;
+
+      const onMove = (ev: PointerEvent | MouseEvent) => {
+        if (!sessionOpen) return;
+
+        const dx = ev.clientX - origin.x;
+        const dy = ev.clientY - origin.y;
+        const active =
+          wasActiveRef.current || Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX;
+        if (active) wasActiveRef.current = true;
+
+        const boardEl = boardRef.current;
+        const hoverSquare = boardEl
+          ? clientToSquare(boardEl, ev.clientX, ev.clientY)
+          : null;
+
+        setHover(hoverSquare);
+        hoverRef.current = hoverSquare;
+        setDrag((prev) =>
+          prev
+            ? {
+                ...prev,
+                ghostX: ev.clientX,
+                ghostY: ev.clientY,
+                active,
+              }
+            : null,
+        );
+      };
+
+      const onFinish = (ev: PointerEvent | MouseEvent) => {
+        if (!sessionOpen) return;
+        sessionOpen = false;
+
+        targetEl.removeEventListener('pointermove', onMove);
+        targetEl.removeEventListener('pointerup', onFinish);
+        targetEl.removeEventListener('pointercancel', onFinish);
+        targetEl.removeEventListener('mousemove', onMove);
+        targetEl.removeEventListener('mouseup', onFinish);
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onFinish);
+        activeDragPointerId.current = null;
+
+        const active = wasActiveRef.current;
+
+        const boardEl = boardRef.current;
+        const drop =
+          hoverRef.current ??
+          (boardEl ? clientToSquare(boardEl, ev.clientX, ev.clientY) : null);
+
+        if (
+          active &&
+          drop &&
+          validTargets.has(`${drop.row},${drop.col}`)
+        ) {
+          onSelectRef.current(drop.row, drop.col);
+        }
+
+        setDrag(null);
+        setHover(null);
+        hoverRef.current = null;
+        wasActiveRef.current = false;
+      };
+
+      targetEl.addEventListener('pointermove', onMove);
+      targetEl.addEventListener('pointerup', onFinish);
+      targetEl.addEventListener('pointercancel', onFinish);
+      targetEl.addEventListener('mousemove', onMove);
+      targetEl.addEventListener('mouseup', onFinish);
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onFinish);
     },
-    [board, canDragPiece, mustContinueFrom, onSelectSquare, playerColor],
+    [board, boardRef, canDragPiece, mustContinueFrom, playerColor],
   );
 
-  useEffect(() => {
-    if (!drag) return;
+  const handlePiecePointerDown = useCallback(
+    (row: number, col: number, e: React.PointerEvent<HTMLDivElement>) => {
+      beginDrag(row, col, e);
+    },
+    [beginDrag],
+  );
 
-    const pointerId = drag.pointerId;
-
-    const onMove = (e: PointerEvent) => {
-      if (e.pointerId !== pointerId) return;
-      const session = dragRef.current;
-      if (!session || !originRef.current) return;
-
-      const dx = e.clientX - originRef.current.x;
-      const dy = e.clientY - originRef.current.y;
-      const active =
-        session.active || Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX;
-
-      const boardEl = boardRef.current;
-      const hoverSquare = boardEl
-        ? clientToSquare(boardEl, e.clientX, e.clientY)
-        : null;
-
-      setHover(hoverSquare);
-      setDrag({
-        ...session,
-        ghostX: e.clientX,
-        ghostY: e.clientY,
-        active,
-      });
-    };
-
-    const finish = (e: PointerEvent) => {
-      if (e.pointerId !== pointerId) return;
-      const session = dragRef.current;
-      if (!session) return;
-
-      const boardEl = boardRef.current;
-      const target = boardEl
-        ? clientToSquare(boardEl, e.clientX, e.clientY)
-        : null;
-
-      if (
-        session.active &&
-        target &&
-        session.validTargets.has(`${target.row},${target.col}`)
-      ) {
-        onSelectSquare(target.row, target.col);
+  const handlePieceMouseDown = useCallback(
+    (row: number, col: number, e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return;
+      // Pointer events already handled this gesture in modern browsers.
+      if (typeof PointerEvent !== 'undefined' && e.nativeEvent instanceof PointerEvent) {
+        return;
       }
-
-      setDrag(null);
-      setHover(null);
-      originRef.current = null;
-    };
-
-    window.addEventListener('pointermove', onMove);
-    window.addEventListener('pointerup', finish);
-    window.addEventListener('pointercancel', finish);
-    return () => {
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', finish);
-      window.removeEventListener('pointercancel', finish);
-    };
-  }, [boardRef, drag, onSelectSquare]);
+      beginDrag(row, col, {
+        clientX: e.clientX,
+        clientY: e.clientY,
+        button: e.button,
+        pointerId: 1,
+        currentTarget: e.currentTarget,
+        preventDefault: () => e.preventDefault(),
+        stopPropagation: () => e.stopPropagation(),
+      });
+    },
+    [beginDrag],
+  );
 
   return {
     drag,
     hover,
     canDragPiece,
     handlePiecePointerDown,
+    handlePieceMouseDown,
     isDraggingFrom: (row: number, col: number) =>
       Boolean(
-        drag?.active &&
-          drag.from.row === row &&
-          drag.from.col === col,
+        drag?.active && drag.from.row === row && drag.from.col === col,
       ),
   };
 }

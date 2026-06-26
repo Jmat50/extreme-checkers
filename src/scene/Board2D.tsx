@@ -46,6 +46,7 @@ export function Board2D({
     hover,
     canDragPiece,
     handlePiecePointerDown,
+    handlePieceMouseDown,
     isDraggingFrom,
   } = usePieceDrag({
     boardRef,
@@ -161,6 +162,11 @@ export function Board2D({
                 onPointerDown={
                   draggable
                     ? (e) => handlePiecePointerDown(r, c, e)
+                    : undefined
+                }
+                onMouseDown={
+                  draggable
+                    ? (e) => handlePieceMouseDown(r, c, e)
                     : undefined
                 }
               />

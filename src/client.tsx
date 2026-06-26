@@ -26,8 +26,8 @@ export function createGameClient(config: LobbyConfig) {
     multiplayer:
       config.mode === 'online'
         ? SocketIO({ server: getGameServerUrl() })
-        : Local({
-            bots: config.mode === 'ai' ? { '1': CheckersBot } : undefined,
-          }),
+        : config.mode === 'ai'
+          ? Local({ bots: { '1': CheckersBot } })
+          : undefined,
   });
 }

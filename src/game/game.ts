@@ -26,8 +26,11 @@ function currentColor(ctx: { currentPlayer: string }): PieceColor {
   return PLAYER_COLORS[ctx.currentPlayer] ?? 'red';
 }
 
-function isPlayersTurn(ctx: { currentPlayer: string }, playerID: string | null): boolean {
-  if (playerID === null) return true;
+function isPlayersTurn(
+  ctx: { currentPlayer: string },
+  playerID: string | null | undefined,
+): boolean {
+  if (playerID == null) return true;
   return ctx.currentPlayer === playerID;
 }
 

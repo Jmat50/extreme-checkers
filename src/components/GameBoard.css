@@ -16,6 +16,7 @@
   padding: 1rem;
   padding-top: 8rem;
   min-height: 0;
+  position: relative;
 }
 
 @media (max-width: 640px) {
