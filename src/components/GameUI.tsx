@@ -1,5 +1,6 @@
 import type { Ctx } from 'boardgame.io';
 import { CheckersState, PLAYER_COLORS } from '../game/types';
+import { ASSETS_2D } from '../scene/assetPaths2d';
 import './GameUI.css';
 
 interface GameUIProps {
@@ -32,13 +33,21 @@ export function GameUI({
     <div className="game-ui">
       <header className="game-header">
         <h1>Extreme Checkers</h1>
-        <button type="button" className="btn-secondary" onClick={onLeave}>
+        <button
+          type="button"
+          className="btn-secondary"
+          style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonSecondary})` }}
+          onClick={onLeave}
+        >
           Leave
         </button>
       </header>
 
       <div className="status-panel">
-        <div className="player-card red">
+        <div
+          className="player-card red"
+          style={{ backgroundImage: `url(${ASSETS_2D.ui.panel})` }}
+        >
           <span className="piece-dot red" />
           <div>
             <strong>{mode === 'ai' ? playerName : playerID === '0' ? playerName : opponentName}</strong>
@@ -54,7 +63,10 @@ export function GameUI({
             </span>
           )}
         </div>
-        <div className="player-card black">
+        <div
+          className="player-card black"
+          style={{ backgroundImage: `url(${ASSETS_2D.ui.panel})` }}
+        >
           <span className="piece-dot black" />
           <div>
             <strong>{mode === 'ai' ? 'AI Opponent' : playerID === '1' ? playerName : opponentName}</strong>

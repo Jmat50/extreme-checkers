@@ -1,16 +1,40 @@
 # Extreme Checkers
 
-3D photorealistic checkers built with [boardgame.io](https://boardgame.io), React, and React Three Fiber.
+2D overhead checkers built with [boardgame.io](https://boardgame.io), React, and CSS Grid sprites.
 
 **Live demo:** https://jmat50.github.io/extreme-checkers/
 
 > Local 2-player and vs AI work on the live demo. Online multiplayer requires running the game server locally.
 
+## Windows visual editor
+
+Tune board scale, piece size, VFX, AI weights, bomb squares, and starting positions with a live 2D WYSIWYG editor (Leva + click-to-edit board). Dev-only — not included in the GitHub Pages game build.
+
+### Run editor (development)
+
+```bash
+npm install
+npm run editor
+```
+
+Opens an Electron window with the 2D board and control panel. Alternatively, double-click `scripts/launch-editor.bat` (requires Node.js; opens browser + Vite dev server).
+
+**Edit rules:** In the Leva panel, set **Rules → editMode** to `bombs`, `startRed`, or `startBlack`, then click dark squares on the board. Switch back to `play` to test moves.
+
+**Save:** Use **Config → Save JSON** or `Ctrl+S` (Electron) to export `gameConfig.json`. Copy values into `src/config/gameConfig.ts` defaults when ready to ship.
+
+### Build portable Windows `.exe`
+
+```bash
+npm run build:editor:win
+```
+
+Output: `release/Extreme Checkers Editor.exe` (portable, no installer). First launch may show Windows SmartScreen for unsigned dev tools — choose “Run anyway”.
+
 ## Run locally
 
 ```bash
 npm install
-npm run convert-models   # one-time: OBJ → GLB conversion
 npm run dev:all          # starts game server + Vite client
 ```
 
@@ -25,26 +49,21 @@ npm run dev:all          # starts game server + Vite client
 
 ## Assets
 
-Source assets live in `assets/` (extracted from checker-board.zip). Web-ready GLBs and textures are in `public/`.
+2D sprites live in `public/assets/2d/` (board tiles, pieces, UI, VFX). See `public/assets/2d/ATTRIBUTION.md` for credits.
 
 ## Credits
 
-### Art & models
+### Art
 
-- <a href="https://www.vecteezy.com/free-vector/bomb-icon">Bomb Icon Vectors by Vecteezy</a> (hazard square markers; source EPS in `assets/icons/bomb-source.eps`)
-- <a href="https://www.videezy.com/elements-and-effects/614-explosion">Explosion by Videezy</a> (piece elimination burst VFX; web copy in `public/vfx/explosion.mp4`)
-- ["Checker Board"](https://skfb.ly/oLTyV) by AnshiNoWara NG+ is licensed under [Creative Commons Attribution 4.0](http://creativecommons.org/licenses/by/4.0/) (board and piece meshes / PBR textures)
-
-### Environment
-
-- Studio HDRI from the [Three.js examples collection](https://github.com/mrdoob/three.js/tree/dev/examples/textures/equirectangular) (`venice_sunset_1k.hdr`, used as `public/hdri/studio.hdr`)
+- [Kenney UI Pack](https://kenney.nl/assets/ui-pack) (CC0) — lobby buttons and panels
+- [Kenney Boardgame Pack](https://kenney.nl/assets/boardgame-pack) (CC0) — reference vectors
+- Project-authored SVG board, pieces, and explosion VFX (CC0)
+- Bomb hazard icon in `public/icons/bomb.svg`
 
 ### Open-source libraries
 
 - [boardgame.io](https://boardgame.io/) — game state, turns, multiplayer, and AI
 - [React](https://react.dev/) — UI
 - [Vite](https://vitejs.dev/) — build tooling
-- [Three.js](https://threejs.org/) — 3D rendering
-- [@react-three/fiber](https://github.com/pmndrs/react-three-fiber) & [@react-three/drei](https://github.com/pmndrs/drei) — React renderer and helpers for Three.js
-- [@react-three/postprocessing](https://github.com/pmndrs/react-postprocessing) — bloom and vignette
 - [Socket.IO](https://socket.io/) — real-time transport (via boardgame.io client)
+- [Leva](https://github.com/pmndrs/leva) — editor control panel

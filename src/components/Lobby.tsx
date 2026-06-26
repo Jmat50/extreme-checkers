@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ASSETS_2D } from '../scene/assetPaths2d';
 import './Lobby.css';
 
 export type GameMode = 'local' | 'online' | 'ai';
@@ -74,9 +75,12 @@ export function Lobby({ onStart }: LobbyProps) {
 
   return (
     <div className="lobby">
-      <div className="lobby-card">
+      <div
+        className="lobby-card"
+        style={{ backgroundImage: `url(${ASSETS_2D.ui.panel})` }}
+      >
         <h1>Extreme Checkers</h1>
-        <p className="subtitle">3D photorealistic checkers with online multiplayer</p>
+        <p className="subtitle">2D overhead checkers with online multiplayer</p>
 
         <label className="field">
           <span>Your name</span>
@@ -94,6 +98,7 @@ export function Lobby({ onStart }: LobbyProps) {
           <button
             type="button"
             className="btn-primary"
+            style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonPrimary})` }}
             disabled={loading}
             onClick={() => onStart({ mode: 'local', playerName })}
           >
@@ -102,6 +107,7 @@ export function Lobby({ onStart }: LobbyProps) {
           <button
             type="button"
             className="btn-primary"
+            style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonPrimary})` }}
             disabled={loading}
             onClick={() => onStart({ mode: 'ai', playerName, playerID: '0' })}
           >
@@ -110,6 +116,7 @@ export function Lobby({ onStart }: LobbyProps) {
           <button
             type="button"
             className="btn-primary"
+            style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonPrimary})` }}
             disabled={loading}
             onClick={() => createOnline(false)}
           >
@@ -131,6 +138,7 @@ export function Lobby({ onStart }: LobbyProps) {
           <button
             type="button"
             className="btn-secondary"
+            style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonSecondary})` }}
             disabled={loading || !joinID.trim()}
             onClick={joinOnline}
           >

@@ -26,19 +26,20 @@ if (!jsFile) fail('Could not find JS bundle in index.html');
 
 const jsPath = path.join(dist, jsFile.replace(base, ''));
 const js = fs.readFileSync(jsPath, 'utf8');
-if (!js.includes('/extreme-checkers/') || !js.includes('models/board.glb')) {
-  fail('JS bundle does not contain GitHub Pages asset paths');
+if (!js.includes('/extreme-checkers/') || !js.includes('assets/2d') || !js.includes('piece-red')) {
+  fail('JS bundle does not contain GitHub Pages 2D asset paths');
 }
 
 const required = [
-  'models/board.glb',
-  'models/piece-red.glb',
-  'models/piece-red-king.glb',
-  'models/piece-black-king.glb',
-  'hdri/studio.hdr',
-  'textures/board/CheckerBoard_Board_BaseColor.png',
-  'icons/bomb.png',
-  'vfx/explosion.mp4',
+  'assets/2d/board/square-light.svg',
+  'assets/2d/board/square-dark.svg',
+  'assets/2d/pieces/piece-red.svg',
+  'assets/2d/pieces/piece-black.svg',
+  'assets/2d/pieces/piece-red-king.svg',
+  'assets/2d/pieces/piece-black-king.svg',
+  'assets/2d/icons/bomb.svg',
+  'assets/2d/ui/button-primary.svg',
+  'icons/bomb.svg',
 ];
 
 for (const asset of required) {

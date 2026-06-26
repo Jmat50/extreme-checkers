@@ -4,7 +4,6 @@ import { createGameClient } from './client';
 
 export default function App() {
   const [config, setConfig] = useState<LobbyConfig | null>(null);
-
   const handleLeave = useCallback(() => setConfig(null), []);
 
   const sessionConfig = useMemo(() => {

@@ -17,6 +17,20 @@ body,
   -webkit-font-smoothing: antialiased;
 }
 
-button {
-  font-family: inherit;
+.editor-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 280px;
+  z-index: 15;
+  padding: 0.4rem 0.75rem;
+  background: rgba(139, 69, 19, 0.92);
+  color: #f5e6d3;
+  font-size: 0.85rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+.game-board--editor .game-board {
+  height: 100vh;
 }

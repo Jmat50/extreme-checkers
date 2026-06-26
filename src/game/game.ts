@@ -1,4 +1,5 @@
 import { Game } from 'boardgame.io';
+import { getGameConfig } from '../config/configStore';
 import { CheckersState, Move, PLAYER_COLORS, PieceColor, Position } from './types';
 import {
   executeMove,
@@ -175,12 +176,13 @@ export function pickAiMove(G: CheckersState, color: PieceColor): Move | null {
   if (moves.length === 0) return null;
 
   const scored = moves.map((move) => {
+    const ai = getGameConfig().ai;
     let score = 0;
-    score += (move.captures?.length ?? 0) * 10;
+    score += (move.captures?.length ?? 0) * ai.captureWeight;
     const result = executeMove(G, move);
     const piece = result.board[move.to.row][move.to.col];
-    if (!piece) score -= 50;
-    if (isHazardSquare(move.to.row, move.to.col)) score -= 40;
+    if (!piece) score -= ai.selfDestructPenalty;
+    if (isHazardSquare(move.to.row, move.to.col)) score -= ai.hazardPenalty;
     score += Math.random() * 0.5;
     return { move, score };
   });

@@ -1,8 +1,11 @@
 node_modules
 dist
+release
 storage
 .DS_Store
 *.local
 *.tsbuildinfo
+editor-stderr.log
+editor-stdout.log
 $tmp/
 $tmpdir/
