@@ -16,7 +16,7 @@ GitHub Pages cannot run Node.js or WebSockets. The Render service handles online
 ### Option A — Blueprint (`render.yaml`)
 
 1. Sign in at [render.com](https://render.com) and connect your GitHub account.
-2. Click **New → Blueprint** and select the `Jmat50/extreme-checkers` repository.
+2. Use **[Deploy to Render](https://render.com/deploy?repo=https://github.com/Jmat50/extreme-checkers)** or click **New → Blueprint** and select the `Jmat50/extreme-checkers` repository.
 3. Render reads [`render.yaml`](../render.yaml) and creates a free web service named `extreme-checkers-api`.
 4. After deploy, copy the service URL (e.g. `https://extreme-checkers-api.onrender.com`).
 5. Verify: open `https://<your-service>.onrender.com/api/health` — should return `{"ok":true}`.
@@ -101,11 +101,12 @@ boardgame.io applies CORS for both the lobby API and Socket.IO when origins matc
 
 | Symptom | Fix |
 |---------|-----|
+| Render deploy fails immediately on start | Check logs for `import.meta.env` errors. Shared game code must use `import.meta.env?.VAR` so Node/tsx can load it. Redeploy latest `main`. |
 | Online buttons disabled on Pages | Set `GAME_SERVER_URL` repo variable and redeploy Pages |
 | `Failed to create lobby` / CORS error | Confirm `ALLOWED_ORIGINS` includes `https://jmat50.github.io` on Render |
 | Long wait before first online game | Render free tier cold start — wait ~1 minute |
 | Game disconnects mid-match | Render may restart free instances; refresh and rejoin |
-| `/api/health` 404 | Server not deployed or wrong start command |
+| `/api/health` 404 | Server not deployed or wrong start command (`npm run start:server`) |
 
 ---
 

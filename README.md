@@ -10,6 +10,12 @@
 | vs AI | Yes |
 | Online multiplayer | Yes — via [Render](https://render.com) game server ([setup guide](docs/DEPLOYMENT.md)) |
 
+## How to play
+
+- **Drag** your piece to a green highlighted square, or **click** a piece then click a destination.
+- Valid moves are highlighted in green; forced captures apply when available.
+- Bomb squares eliminate any piece that lands on them.
+
 ## Deployment (GitHub Pages + Render)
 
 The live demo is split across two free hosts:
@@ -21,9 +27,12 @@ Full step-by-step instructions: **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)**
 
 Quick checklist:
 
-1. Deploy [`render.yaml`](render.yaml) on Render → copy service URL
-2. Set GitHub repo variable `GAME_SERVER_URL` to that URL (no trailing slash)
-3. Push to `main` — Pages rebuild picks up the server URL
+1. Deploy on Render — **[one-click deploy](https://render.com/deploy?repo=https://github.com/Jmat50/extreme-checkers)** or use [`render.yaml`](render.yaml) blueprint
+2. Verify `https://extreme-checkers-api.onrender.com/api/health` returns `{"ok":true}`
+3. Set GitHub repo variable `GAME_SERVER_URL` to that URL (no trailing slash) if not already set
+4. Push to `main` — Pages rebuild picks up the server URL
+
+If Render deploy fails on startup, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md#5-troubleshooting).
 
 ## Windows visual editor
 
@@ -66,9 +75,20 @@ Optional: copy [`.env.example`](.env.example) to `.env.local` and set `VITE_GAME
 
 ## Modes
 
-- **Local 2-Player** — hot-seat on one machine
+- **Local 2-Player** — hot-seat on one machine (drag or click to move)
 - **Play vs AI** — offline with boardgame.io bot
 - **Create / Join Online** — multiplayer via Socket.IO (Render in production, local server in dev)
+
+## Project layout
+
+| Path | Role |
+|------|------|
+| `src/game/` | Rules, board state, AI — shared with server |
+| `src/scene/` | 2D board, pieces, VFX sprites |
+| `src/hooks/usePieceDrag.ts` | Drag-and-drop movement |
+| `server/index.ts` | Multiplayer server + lobby API |
+| `docs/DEPLOYMENT.md` | Full Pages + Render guide |
+| `AGENTS.md` | Architecture notes for coding agents |
 
 ## Assets
 
