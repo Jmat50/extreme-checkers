@@ -8,6 +8,7 @@ import type { GameMode } from './Lobby';
 import { IS_EDITOR } from '../config/editorMode';
 import { useConfigStore } from '../config/configStore';
 import { isDarkSquare } from '../game/logic';
+import { PLAYER_COLORS } from '../game/game';
 import './GameBoard.css';
 
 interface GameBoardProps extends BoardProps<CheckersState> {
@@ -56,6 +57,11 @@ export function GameBoard({
 
   const interactive = IS_EDITOR ? editMode === 'play' && playInteractive : playInteractive;
 
+  const playerColor =
+    interactive && !ctx.gameover
+      ? (PLAYER_COLORS[ctx.currentPlayer] ?? null)
+      : null;
+
   const handleSelect = useCallback(
     (row: number, col: number) => {
       if (IS_EDITOR && editMode !== 'play') {
@@ -93,7 +99,12 @@ export function GameBoard({
         />
       )}
       <div className="board-2d-wrapper">
-        <Board2D G={G} onSelectSquare={handleSelect} interactive={interactive} />
+        <Board2D
+          G={G}
+          onSelectSquare={handleSelect}
+          interactive={interactive}
+          playerColor={playerColor}
+        />
       </div>
     </div>
   );

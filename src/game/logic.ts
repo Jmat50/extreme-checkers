@@ -154,6 +154,31 @@ export function getMovesForPiece(board: Cell[][], from: Position): Move[] {
   return slideMoves(board, from, piece);
 }
 
+/** Valid moves when selecting a piece (respects forced capture and multi-jump). */
+export function getValidMovesForSelection(
+  board: Cell[][],
+  pos: Position,
+  color: PieceColor,
+  mustContinueFrom: Position | null,
+): Move[] {
+  if (mustContinueFrom) {
+    if (pos.row !== mustContinueFrom.row || pos.col !== mustContinueFrom.col) {
+      return [];
+    }
+    return getMovesForPiece(board, pos).filter((m) => m.captures?.length);
+  }
+
+  const piece = getPieceAt(board, pos);
+  if (!piece || piece.color !== color) return [];
+
+  const validMoves = getMovesForPiece(board, pos);
+  const allMoves = getAllMoves(board, color);
+  const mustCapture = allMoves.some((m) => m.captures?.length);
+  return mustCapture
+    ? validMoves.filter((m) => m.captures?.length)
+    : validMoves;
+}
+
 export function getAllMoves(board: Cell[][], color: PieceColor): Move[] {
   const moves: Move[] = [];
   let hasCapture = false;

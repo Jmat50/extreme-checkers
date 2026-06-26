@@ -2,7 +2,7 @@ import { ASSETS_2D } from './assetPaths2d';
 import { isDarkSquare } from '../game/logic';
 import './Board2D.css';
 
-export type SquareHighlight = 'none' | 'selected' | 'valid' | 'edit-bomb' | 'edit-red' | 'edit-black';
+export type SquareHighlight = 'none' | 'selected' | 'valid' | 'drop-target' | 'edit-bomb' | 'edit-red' | 'edit-black';
 
 interface BoardSquareProps {
   row: number;
@@ -17,6 +17,7 @@ const HIGHLIGHT_COLORS: Record<SquareHighlight, string | null> = {
   none: null,
   selected: '#ffcc00',
   valid: '#44ff88',
+  'drop-target': '#66ffaa',
   'edit-bomb': '#ff4444',
   'edit-red': '#ff6666',
   'edit-black': '#888888',
@@ -50,7 +51,7 @@ export function BoardSquare({
       />
       {overlayColor && (
         <span
-          className="board-square__highlight"
+          className={`board-square__highlight${highlight === 'drop-target' ? ' board-square__highlight--drop-target' : ''}`}
           style={{ backgroundColor: overlayColor, opacity: highlightOpacity }}
         />
       )}

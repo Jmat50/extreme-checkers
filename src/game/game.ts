@@ -5,6 +5,7 @@ import {
   executeMove,
   getAllMoves,
   getMovesForPiece,
+  getValidMovesForSelection,
   initialState,
   isHazardSquare,
   movesEqual,
@@ -74,12 +75,12 @@ export const CheckersGame: Game<CheckersState> = {
         }
 
         if (piece && piece.color === color) {
-          const validMoves = getMovesForPiece(G.board, pos);
-          const allMoves = getAllMoves(G.board, color);
-          const mustCapture = allMoves.some((m) => m.captures?.length);
-          const filtered = mustCapture
-            ? validMoves.filter((m) => m.captures?.length)
-            : validMoves;
+          const filtered = getValidMovesForSelection(
+            G.board,
+            pos,
+            color,
+            G.mustContinueFrom,
+          );
           return { ...G, selected: pos, validMoves: filtered };
         }
 
@@ -90,12 +91,12 @@ export const CheckersGame: Game<CheckersState> = {
         return { ...G, selected: null, validMoves: [] };
       }
 
-      const validMoves = getMovesForPiece(G.board, pos);
-      const allMoves = getAllMoves(G.board, color);
-      const mustCapture = allMoves.some((m) => m.captures?.length);
-      const filtered = mustCapture
-        ? validMoves.filter((m) => m.captures?.length)
-        : validMoves;
+      const filtered = getValidMovesForSelection(
+        G.board,
+        pos,
+        color,
+        G.mustContinueFrom,
+      );
 
       if (filtered.length === 0) {
         return { ...G, selected: null, validMoves: [] };

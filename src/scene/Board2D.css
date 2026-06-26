@@ -47,7 +47,48 @@
   justify-content: center;
   pointer-events: none;
   z-index: 2;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+
+.piece-sprite--draggable {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+}
+
+.piece-sprite--draggable:active {
+  cursor: grabbing;
+}
+
+.piece-sprite--dragging {
+  opacity: 0.25;
+}
+
+.board-2d--dragging {
+  touch-action: none;
+  user-select: none;
+}
+
+.piece-drag-ghost {
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.55));
+}
+
+.piece-drag-ghost img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.board-square__highlight--drop-target {
+  inset: 4%;
+  box-shadow: 0 0 0 3px rgba(102, 255, 170, 0.9);
 }
 
 .piece-sprite img {
@@ -55,6 +96,10 @@
   height: calc(100% * var(--piece-scale, 0.82));
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
+}
+
+.piece-sprite--draggable img {
+  pointer-events: none;
 }
 
 .piece-sprite--selected img {

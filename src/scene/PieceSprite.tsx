@@ -1,4 +1,4 @@
-import type { CSSProperties } from 'react';
+import type { CSSProperties, PointerEvent } from 'react';
 import { pieceAsset } from './assetPaths2d';
 import type { PieceColor } from '../game/types';
 import './Board2D.css';
@@ -10,6 +10,9 @@ interface PieceSpriteProps {
   king: boolean;
   selected: boolean;
   pieceSizeRatio: number;
+  draggable?: boolean;
+  isDragging?: boolean;
+  onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
 }
 
 export function PieceSprite({
@@ -19,14 +22,25 @@ export function PieceSprite({
   king,
   selected,
   pieceSizeRatio,
+  draggable = false,
+  isDragging = false,
+  onPointerDown,
 }: PieceSpriteProps) {
   return (
     <div
-      className={`piece-sprite${selected ? ' piece-sprite--selected' : ''}`}
+      className={[
+        'piece-sprite',
+        selected ? 'piece-sprite--selected' : '',
+        draggable ? 'piece-sprite--draggable' : '',
+        isDragging ? 'piece-sprite--dragging' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       style={{
         gridArea: `${row + 1} / ${col + 1}`,
         '--piece-scale': pieceSizeRatio,
       } as CSSProperties}
+      onPointerDown={onPointerDown}
     >
       <img src={pieceAsset(color, king)} alt="" draggable={false} />
     </div>
