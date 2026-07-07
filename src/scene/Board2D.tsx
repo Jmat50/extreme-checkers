@@ -73,6 +73,19 @@ export function Board2D({
     [startBlack],
   );
 
+  function isSquareInteractive(row: number, col: number): boolean {
+    if (!boardInteractive) return false;
+    if (isEditing) return true;
+
+    const key = `${row},${col}`;
+    if (validTargets.has(key)) return true;
+
+    const piece = G.board[row]?.[col];
+    if (piece && playerColor && piece.color === playerColor) return true;
+
+    return false;
+  }
+
   function squareHighlight(row: number, col: number): SquareHighlight {
     const key = `${row},${col}`;
     if (
@@ -101,7 +114,7 @@ export function Board2D({
           col={col}
           highlight={squareHighlight(row, col)}
           highlightOpacity={sceneConfig.highlightOpacity}
-          interactive={boardInteractive}
+          interactive={isSquareInteractive(row, col)}
           onSelect={onSelectSquare}
         />,
       );

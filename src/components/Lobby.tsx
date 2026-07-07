@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ASSETS_2D } from '../scene/assetPaths2d';
+import { EventuallyBackground } from './EventuallyBackground';
 import { apiUrl, isOnlineMultiplayerConfigured } from '../config/serverUrl';
 import './Lobby.css';
 
@@ -76,91 +76,114 @@ export function Lobby({ onStart }: LobbyProps) {
   };
 
   return (
-    <div className="lobby">
-      <div
-        className="lobby-card"
-        style={{ backgroundImage: `url(${ASSETS_2D.ui.panel})` }}
-      >
+    <div className="lobby-eventually">
+      <EventuallyBackground />
+
+      <header id="header">
         <h1>Extreme Checkers</h1>
-        <p className="subtitle">2D overhead checkers with online multiplayer</p>
-        {!onlineAvailable && (
-          <p className="online-hint">
-            Online play is not configured for this build. Local and vs AI still work.
-          </p>
-        )}
+        <p>
+          2D overhead checkers with bombs, captures, and online multiplayer.
+          <br />
+          Red moves first — pass the device when the turn changes.
+        </p>
+      </header>
 
-        <label className="field">
-          <span>Your name</span>
-          <input
-            type="text"
-            value={playerName}
-            onChange={(e) => setPlayerName(e.target.value)}
-            maxLength={20}
-          />
-        </label>
+      <form
+        id="signup-form"
+        className="lobby-form"
+        onSubmit={(e) => e.preventDefault()}
+      >
+        <input
+          type="text"
+          name="playerName"
+          id="player-name"
+          placeholder="Your name"
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+          maxLength={20}
+          aria-label="Your name"
+        />
+        <button
+          type="button"
+          className="button"
+          disabled={loading}
+          onClick={() => onStart({ mode: 'local', playerName })}
+        >
+          Local 2-Player
+        </button>
+        <button
+          type="button"
+          className="button"
+          disabled={loading}
+          onClick={() => onStart({ mode: 'ai', playerName, playerID: '0' })}
+        >
+          Play vs AI
+        </button>
+        <button
+          type="button"
+          className="button"
+          disabled={loading || !onlineAvailable}
+          title={onlineAvailable ? undefined : 'Deploy the Render game server and set GAME_SERVER_URL'}
+          onClick={() => createOnline(false)}
+        >
+          Create Online
+        </button>
+      </form>
 
-        {error && <p className="error">{error}</p>}
+      <form
+        className="lobby-join-form"
+        onSubmit={(e) => {
+          e.preventDefault();
+          joinOnline();
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Join code"
+          value={joinID}
+          onChange={(e) => setJoinID(e.target.value.toUpperCase())}
+          maxLength={6}
+          aria-label="Join with code"
+        />
+        <button
+          type="submit"
+          className="button button--secondary"
+          disabled={loading || !joinID.trim() || !onlineAvailable}
+          title={onlineAvailable ? undefined : 'Deploy the Render game server and set GAME_SERVER_URL'}
+        >
+          Join Game
+        </button>
+      </form>
 
-        <div className="lobby-actions">
-          <button
-            type="button"
-            className="btn-primary"
-            style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonPrimary})` }}
-            disabled={loading}
-            onClick={() => onStart({ mode: 'local', playerName })}
-          >
-            Local 2-Player
-          </button>
-          <button
-            type="button"
-            className="btn-primary"
-            style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonPrimary})` }}
-            disabled={loading}
-            onClick={() => onStart({ mode: 'ai', playerName, playerID: '0' })}
-          >
-            Play vs AI
-          </button>
-          <button
-            type="button"
-            className="btn-primary"
-            style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonPrimary})` }}
-            disabled={loading || !onlineAvailable}
-            title={onlineAvailable ? undefined : 'Deploy the Render game server and set GAME_SERVER_URL'}
-            onClick={() => createOnline(false)}
-          >
-            Create Online Game
-          </button>
-        </div>
+      {!onlineAvailable && (
+        <p className="lobby-hint">
+          Online play is not configured for this build. Local and vs AI still work.
+        </p>
+      )}
 
-        <div className="join-section">
-          <label className="field">
-            <span>Join with code</span>
-            <input
-              type="text"
-              value={joinID}
-              onChange={(e) => setJoinID(e.target.value.toUpperCase())}
-              placeholder="ABC123"
-              maxLength={6}
-            />
-          </label>
-          <button
-            type="button"
-            className="btn-secondary"
-            style={{ backgroundImage: `url(${ASSETS_2D.ui.buttonSecondary})` }}
-            disabled={loading || !joinID.trim() || !onlineAvailable}
-            title={onlineAvailable ? undefined : 'Deploy the Render game server and set GAME_SERVER_URL'}
-            onClick={joinOnline}
-          >
-            Join Game
-          </button>
-        </div>
+      {error && <p className="lobby-error">{error}</p>}
 
-        {matchID && (
-          <p className="match-code">
-            Share this code: <strong>{matchID}</strong>
-          </p>
-        )}
-      </div>
+      {matchID && (
+        <p className="lobby-match-code">
+          Share this code: <strong>{matchID}</strong>
+        </p>
+      )}
+
+      <footer id="footer">
+        <ul className="copyright">
+          <li>Extreme Checkers</li>
+          <li>
+            Design:{' '}
+            <a href="https://html5up.net/eventually" target="_blank" rel="noreferrer">
+              Eventually
+            </a>{' '}
+            by{' '}
+            <a href="https://html5up.net" target="_blank" rel="noreferrer">
+              HTML5 UP
+            </a>
+          </li>
+        </ul>
+      </footer>
     </div>
   );
 }

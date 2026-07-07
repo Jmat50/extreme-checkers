@@ -24,10 +24,41 @@ export function GameUI({
 }: GameUIProps) {
   const currentColor = PLAYER_COLORS[ctx.currentPlayer];
   const isMyTurn =
-    mode === 'local' ||
-    ((mode === 'ai' || mode === 'online') && ctx.currentPlayer === playerID);
+    (mode === 'ai' || mode === 'online') && ctx.currentPlayer === playerID;
 
   const winner = ctx.gameover?.winner ?? G.winner;
+  const redActive = !winner && currentColor === 'red';
+  const blackActive = !winner && currentColor === 'black';
+
+  const redName =
+    mode === 'local'
+      ? 'Player 1'
+      : mode === 'ai'
+        ? playerName
+        : playerID === '0'
+          ? playerName
+          : opponentName;
+
+  const blackName =
+    mode === 'local'
+      ? 'Player 2'
+      : mode === 'ai'
+        ? 'AI Opponent'
+        : playerID === '1'
+          ? playerName
+          : opponentName;
+
+  const turnLabel = winner
+    ? null
+    : mode === 'local'
+      ? `${currentColor === 'red' ? 'Red' : 'Black'}'s turn`
+      : isMyTurn
+        ? 'Your turn'
+        : `${currentColor}'s turn`;
+
+  const showCaptureHint =
+    G.mustContinueFrom &&
+    (mode === 'local' || isMyTurn);
 
   return (
     <div className="game-ui">
@@ -45,12 +76,12 @@ export function GameUI({
 
       <div className="status-panel">
         <div
-          className="player-card red"
+          className={`player-card red${redActive ? ' player-card--active' : ''}`}
           style={{ backgroundImage: `url(${ASSETS_2D.ui.panel})` }}
         >
           <span className="piece-dot red" />
           <div>
-            <strong>{mode === 'ai' ? playerName : playerID === '0' ? playerName : opponentName}</strong>
+            <strong>{redName}</strong>
             <small>Red</small>
           </div>
         </div>
@@ -59,23 +90,23 @@ export function GameUI({
             <span className="winner-text">{winner.toUpperCase()} wins!</span>
           ) : (
             <span className={isMyTurn ? 'your-turn' : 'their-turn'}>
-              {isMyTurn ? 'Your turn' : `${currentColor}'s turn`}
+              {turnLabel}
             </span>
           )}
         </div>
         <div
-          className="player-card black"
+          className={`player-card black${blackActive ? ' player-card--active' : ''}`}
           style={{ backgroundImage: `url(${ASSETS_2D.ui.panel})` }}
         >
           <span className="piece-dot black" />
           <div>
-            <strong>{mode === 'ai' ? 'AI Opponent' : playerID === '1' ? playerName : opponentName}</strong>
+            <strong>{blackName}</strong>
             <small>Black</small>
           </div>
         </div>
       </div>
 
-      {G.mustContinueFrom && isMyTurn && (
+      {showCaptureHint && (
         <div className="hint-banner">Continue your capture!</div>
       )}
       {!winner && (

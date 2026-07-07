@@ -22,8 +22,8 @@ export interface CheckersGameProps {
   events: { endTurn: () => void };
 }
 
-function currentColor(ctx: { currentPlayer: string }): PieceColor {
-  return PLAYER_COLORS[ctx.currentPlayer] ?? 'red';
+function currentColor(ctx: { currentPlayer: string }): PieceColor | null {
+  return PLAYER_COLORS[ctx.currentPlayer] ?? null;
 }
 
 function isPlayersTurn(
@@ -52,8 +52,18 @@ export const CheckersGame: Game<CheckersState> = {
       if (!isPlayersTurn(ctx, playerID)) return G;
 
       const color = currentColor(ctx);
+      if (!color) return G;
+
       const pos = { row, col };
       const piece = G.board[row][col];
+
+      if (piece && piece.color !== color) {
+        const isValidTarget =
+          Boolean(G.mustContinueFrom) ||
+          (G.selected != null &&
+            G.validMoves.some((m) => m.to.row === row && m.to.col === col));
+        if (!isValidTarget) return G;
+      }
 
       const finishMove = (next: CheckersState) => {
         if (next.mustContinueFrom) return next;
@@ -90,7 +100,7 @@ export const CheckersGame: Game<CheckersState> = {
         return { ...G, selected: null, validMoves: [] };
       }
 
-      if (!piece || piece.color !== color) {
+      if (!piece) {
         return { ...G, selected: null, validMoves: [] };
       }
 
@@ -113,6 +123,8 @@ export const CheckersGame: Game<CheckersState> = {
       if (!isPlayersTurn(ctx, playerID)) return G;
 
       const color = currentColor(ctx);
+      if (!color) return G;
+
       const allMoves = getAllMoves(G.board, color);
       const valid = allMoves.find((m) => movesEqual(m, move));
       if (!valid) return G;
