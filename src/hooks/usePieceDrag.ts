@@ -2,7 +2,8 @@ import { useCallback, useRef, useState } from 'react';
 import type { Cell, Piece, PieceColor, Position } from '../game/types';
 import { getValidMovesForSelection } from '../game/logic';
 
-const DRAG_THRESHOLD_PX = 6;
+const DRAG_THRESHOLD_PX = 8;
+const DROP_THRESHOLD_PX = 24;
 
 export function clientToSquare(
   boardEl: HTMLElement,
@@ -56,6 +57,10 @@ type DragPointerLike = {
   stopPropagation: () => void;
 };
 
+function sameSquare(a: Position, b: Position): boolean {
+  return a.row === b.row && a.col === b.col;
+}
+
 export function usePieceDrag({
   boardRef,
   board,
@@ -70,7 +75,12 @@ export function usePieceDrag({
   const activeDragPointerId = useRef<number | null>(null);
   const hoverRef = useRef<Position | null>(null);
   const wasActiveRef = useRef(false);
+  const suppressSquareClicksUntil = useRef(0);
   onSelectRef.current = onSelectSquare;
+
+  const shouldSuppressSquareClick = useCallback(() => {
+    return Date.now() < suppressSquareClicksUntil.current;
+  }, []);
 
   const canDragPiece = useCallback(
     (row: number, col: number): boolean => {
@@ -114,8 +124,9 @@ export function usePieceDrag({
       const origin = { x: e.clientX, y: e.clientY };
       const targetEl = e.currentTarget;
       let sessionOpen = true;
+      let maxDist = 0;
+      let hoveredValidTarget = false;
 
-      onSelectRef.current(row, col);
       activeDragPointerId.current = e.pointerId;
 
       if (targetEl.setPointerCapture && 'pointerId' in e) {
@@ -144,14 +155,25 @@ export function usePieceDrag({
 
         const dx = ev.clientX - origin.x;
         const dy = ev.clientY - origin.y;
-        const active =
-          wasActiveRef.current || Math.hypot(dx, dy) >= DRAG_THRESHOLD_PX;
+        const dist = Math.hypot(dx, dy);
+        maxDist = Math.max(maxDist, dist);
+        const active = wasActiveRef.current || dist >= DRAG_THRESHOLD_PX;
         if (active) wasActiveRef.current = true;
 
         const boardEl = boardRef.current;
         const hoverSquare = boardEl
           ? clientToSquare(boardEl, ev.clientX, ev.clientY)
           : null;
+
+        if (hoverSquare) {
+          const hoverKey = `${hoverSquare.row},${hoverSquare.col}`;
+          if (
+            validTargets.has(hoverKey) &&
+            !sameSquare(hoverSquare, from)
+          ) {
+            hoveredValidTarget = true;
+          }
+        }
 
         setHover(hoverSquare);
         hoverRef.current = hoverSquare;
@@ -180,19 +202,28 @@ export function usePieceDrag({
         window.removeEventListener('mouseup', onFinish);
         activeDragPointerId.current = null;
 
-        const active = wasActiveRef.current;
-
         const boardEl = boardRef.current;
         const drop =
           hoverRef.current ??
           (boardEl ? clientToSquare(boardEl, ev.clientX, ev.clientY) : null);
 
-        if (
-          active &&
-          drop &&
-          validTargets.has(`${drop.row},${drop.col}`)
-        ) {
-          onSelectRef.current(drop.row, drop.col);
+        const dropKey = drop ? `${drop.row},${drop.col}` : null;
+        const isValidDrop =
+          maxDist >= DROP_THRESHOLD_PX &&
+          hoveredValidTarget &&
+          drop != null &&
+          !sameSquare(drop, from) &&
+          dropKey != null &&
+          validTargets.has(dropKey);
+
+        if (isValidDrop) {
+          suppressSquareClicksUntil.current = Date.now() + 400;
+          onSelectRef.current(from.row, from.col);
+          queueMicrotask(() => {
+            onSelectRef.current(drop!.row, drop!.col);
+          });
+        } else if (maxDist < DROP_THRESHOLD_PX) {
+          onSelectRef.current(from.row, from.col);
         }
 
         setDrag(null);
@@ -222,7 +253,6 @@ export function usePieceDrag({
   const handlePieceMouseDown = useCallback(
     (row: number, col: number, e: React.MouseEvent<HTMLDivElement>) => {
       if (e.button !== 0) return;
-      // Pointer events already handled this gesture in modern browsers.
       if (typeof PointerEvent !== 'undefined' && e.nativeEvent instanceof PointerEvent) {
         return;
       }
@@ -245,6 +275,7 @@ export function usePieceDrag({
     canDragPiece,
     handlePiecePointerDown,
     handlePieceMouseDown,
+    shouldSuppressSquareClick,
     isDraggingFrom: (row: number, col: number) =>
       Boolean(
         drag?.active && drag.from.row === row && drag.from.col === col,

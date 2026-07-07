@@ -47,6 +47,7 @@ export function Board2D({
     canDragPiece,
     handlePiecePointerDown,
     handlePieceMouseDown,
+    shouldSuppressSquareClick,
     isDraggingFrom,
   } = usePieceDrag({
     boardRef,
@@ -58,6 +59,12 @@ export function Board2D({
   });
 
   const dragValidTargets = drag?.validTargets ?? null;
+  const dragFrom = drag?.from ?? null;
+
+  const handleSquareSelect = (row: number, col: number) => {
+    if (drag || shouldSuppressSquareClick()) return;
+    onSelectSquare(row, col);
+  };
 
   const hazardSet = useMemo(() => {
     const squares = editMode === 'play' ? getHazardSquares() : hazardSquares;
@@ -76,6 +83,7 @@ export function Board2D({
   function isSquareInteractive(row: number, col: number): boolean {
     if (!boardInteractive) return false;
     if (isEditing) return true;
+    if (drag) return false;
 
     const key = `${row},${col}`;
     if (validTargets.has(key)) return true;
@@ -99,8 +107,19 @@ export function Board2D({
     if (editMode === 'bombs' && hazardSet.has(key)) return 'edit-bomb';
     if (editMode === 'startRed' && startRedSet.has(key)) return 'edit-red';
     if (editMode === 'startBlack' && startBlackSet.has(key)) return 'edit-black';
-    if (!isEditing && G.selected?.row === row && G.selected?.col === col) return 'selected';
-    if (!isEditing && validTargets.has(key)) return 'valid';
+    if (
+      !isEditing &&
+      ((G.selected?.row === row && G.selected?.col === col) ||
+        (dragFrom?.row === row && dragFrom?.col === col))
+    ) {
+      return 'selected';
+    }
+    if (
+      !isEditing &&
+      (validTargets.has(key) || dragValidTargets?.has(key))
+    ) {
+      return 'valid';
+    }
     return 'none';
   }
 
@@ -115,7 +134,7 @@ export function Board2D({
           highlight={squareHighlight(row, col)}
           highlightOpacity={sceneConfig.highlightOpacity}
           interactive={isSquareInteractive(row, col)}
-          onSelect={onSelectSquare}
+          onSelect={handleSquareSelect}
         />,
       );
     }
@@ -168,7 +187,10 @@ export function Board2D({
                 col={c}
                 color={cell.color}
                 king={cell.king}
-                selected={G.selected?.row === r && G.selected?.col === c}
+                selected={
+                  (G.selected?.row === r && G.selected?.col === c) ||
+                  (dragFrom?.row === r && dragFrom?.col === c)
+                }
                 pieceSizeRatio={sceneConfig.pieceSizeRatio}
                 draggable={draggable}
                 isDragging={isDraggingFrom(r, c)}
@@ -182,6 +204,7 @@ export function Board2D({
                     ? (e) => handlePieceMouseDown(r, c, e)
                     : undefined
                 }
+                onClick={(e) => e.stopPropagation()}
               />
             );
           }),

@@ -43,7 +43,7 @@ export const CheckersGame: Game<CheckersState> = {
 
   turn: {
     minMoves: 1,
-    maxMoves: 1,
+    maxMoves: 2,
   },
 
   moves: {

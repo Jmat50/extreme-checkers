@@ -14,6 +14,7 @@ interface PieceSpriteProps {
   isDragging?: boolean;
   onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
   onMouseDown?: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
 export function PieceSprite({
@@ -27,6 +28,7 @@ export function PieceSprite({
   isDragging = false,
   onPointerDown,
   onMouseDown,
+  onClick,
 }: PieceSpriteProps) {
   return (
     <div
@@ -44,6 +46,7 @@ export function PieceSprite({
       } as CSSProperties}
       onPointerDown={onPointerDown}
       onMouseDown={onMouseDown}
+      onClick={onClick}
     >
       <img src={pieceAsset(color, king)} alt="" draggable={false} />
     </div>
