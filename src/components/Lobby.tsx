@@ -165,23 +165,6 @@ export function Lobby({ onStart }: LobbyProps) {
           Share this code: <strong>{matchID}</strong>
         </p>
       )}
-
-      <footer id="footer">
-        <ul className="copyright">
-          <li>Extreme Checkers</li>
-          <li>
-            Background:{' '}
-            <a
-              href="https://github.com/baunov/gradients-bg"
-              target="_blank"
-              rel="noreferrer"
-            >
-              gradients-bg
-            </a>{' '}
-            by baunov
-          </li>
-        </ul>
-      </footer>
     </div>
   );
 }
