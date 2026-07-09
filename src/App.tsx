@@ -1,5 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Lobby, LobbyConfig } from './components/Lobby';
+import { GradientsBackground } from './components/GradientsBackground';
 import { createGameClient } from './client';
 
 export default function App() {
@@ -16,14 +17,19 @@ export default function App() {
     return createGameClient(sessionConfig);
   }, [sessionConfig]);
 
-  if (!config || !ClientComponent) {
-    return <Lobby onStart={setConfig} />;
-  }
-
   return (
-    <ClientComponent
-      matchID={config.matchID ?? 'local'}
-      playerID={config.mode === 'local' ? undefined : config.playerID ?? '0'}
-    />
+    <>
+      <GradientsBackground />
+      <div className="app-shell">
+        {!config || !ClientComponent ? (
+          <Lobby onStart={setConfig} />
+        ) : (
+          <ClientComponent
+            matchID={config.matchID ?? 'local'}
+            playerID={config.mode === 'local' ? undefined : config.playerID ?? '0'}
+          />
+        )}
+      </div>
+    </>
   );
 }

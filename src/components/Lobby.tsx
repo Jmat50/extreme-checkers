@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { EventuallyBackground } from './EventuallyBackground';
 import { apiUrl, isOnlineMultiplayerConfigured } from '../config/serverUrl';
 import './Lobby.css';
 
@@ -77,8 +76,6 @@ export function Lobby({ onStart }: LobbyProps) {
 
   return (
     <div className="lobby-eventually">
-      <EventuallyBackground />
-
       <header id="header">
         <h1>Extreme Checkers</h1>
         <p>
@@ -173,14 +170,15 @@ export function Lobby({ onStart }: LobbyProps) {
         <ul className="copyright">
           <li>Extreme Checkers</li>
           <li>
-            Design:{' '}
-            <a href="https://html5up.net/eventually" target="_blank" rel="noreferrer">
-              Eventually
+            Background:{' '}
+            <a
+              href="https://github.com/baunov/gradients-bg"
+              target="_blank"
+              rel="noreferrer"
+            >
+              gradients-bg
             </a>{' '}
-            by{' '}
-            <a href="https://html5up.net" target="_blank" rel="noreferrer">
-              HTML5 UP
-            </a>
+            by baunov
           </li>
         </ul>
       </footer>

@@ -5,7 +5,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: #1a1410;
+  background: transparent;
 }
 
 .board-2d-wrapper {

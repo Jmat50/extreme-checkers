@@ -2,15 +2,14 @@
 
 .lobby-eventually {
   position: relative;
-  z-index: 2;
+  z-index: 1;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 6em 4em 4em;
-  background-color: #000;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.9);
   font-family: 'Roboto', sans-serif;
   font-size: 16pt;
   font-weight: 400;

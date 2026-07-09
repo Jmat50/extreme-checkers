@@ -1,5 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { createGameClient } from '../client';
+import { GradientsBackground } from '../components/GradientsBackground';
 import { LevaPanel } from './LevaPanel';
 import { useConfigStore } from '../config/configStore';
 import { saveConfigToDisk } from './exportConfig';
@@ -27,11 +28,14 @@ export function EditorShell() {
 
   return (
     <>
-      <LevaPanel />
-      <div className="editor-banner">
-        Editor mode — use Rules → editMode to click squares on the board. Save JSON when done.
+      <GradientsBackground />
+      <div className="app-shell">
+        <LevaPanel />
+        <div className="editor-banner">
+          Editor mode — use Rules → editMode to click squares on the board. Save JSON when done.
+        </div>
+        <ClientComponent key={rulesVersion} matchID="editor" playerID={undefined} />
       </div>
-      <ClientComponent key={rulesVersion} matchID="editor" playerID={undefined} />
     </>
   );
 }
