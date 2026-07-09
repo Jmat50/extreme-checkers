@@ -1,0 +1,44 @@
+.background-music-toggle {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 100;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(12, 8, 28, 0.78);
+  color: #f5e6d3;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+}
+
+.background-music-toggle:hover {
+  background: rgba(24, 16, 48, 0.9);
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.background-music-toggle:active {
+  transform: scale(0.97);
+}
+
+.background-music-toggle:focus-visible {
+  outline: 2px solid #c9a86c;
+  outline-offset: 2px;
+}
+
+.background-music-toggle__icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.background-music-toggle__label {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}

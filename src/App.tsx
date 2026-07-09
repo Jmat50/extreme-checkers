@@ -1,6 +1,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Lobby, LobbyConfig } from './components/Lobby';
 import { GradientsBackground } from './components/GradientsBackground';
+import { BackgroundMusic } from './components/BackgroundMusic';
 import { createGameClient } from './client';
 
 export default function App() {
@@ -20,6 +21,7 @@ export default function App() {
   return (
     <>
       <GradientsBackground />
+      <BackgroundMusic />
       <div className="app-shell">
         {!config || !ClientComponent ? (
           <Lobby onStart={setConfig} />

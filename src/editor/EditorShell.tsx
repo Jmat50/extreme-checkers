@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { createGameClient } from '../client';
 import { GradientsBackground } from '../components/GradientsBackground';
+import { BackgroundMusic } from '../components/BackgroundMusic';
 import { LevaPanel } from './LevaPanel';
 import { useConfigStore } from '../config/configStore';
 import { saveConfigToDisk } from './exportConfig';
@@ -29,6 +30,7 @@ export function EditorShell() {
   return (
     <>
       <GradientsBackground />
+      <BackgroundMusic />
       <div className="app-shell">
         <LevaPanel />
         <div className="editor-banner">
