@@ -33,8 +33,6 @@ const DEFAULT_HAZARDS: Position[] = [
   { row: 3, col: 0 },
   { row: 4, col: 7 },
   { row: 5, col: 0 },
-  { row: 6, col: 2 },
-  { row: 6, col: 4 },
   { row: 6, col: 7 },
   { row: 7, col: 0 },
   { row: 7, col: 2 },
