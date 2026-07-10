@@ -1,12 +1,29 @@
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, useRef } from 'react';
 import { Lobby, LobbyConfig } from './components/Lobby';
 import { GradientsBackground } from './components/GradientsBackground';
 import { BackgroundMusic } from './components/BackgroundMusic';
+import { BurnTransition } from './components/BurnTransition';
 import { createGameClient } from './client';
 
 export default function App() {
   const [config, setConfig] = useState<LobbyConfig | null>(null);
+  const [burning, setBurning] = useState(false);
+  const pendingConfigRef = useRef<LobbyConfig | null>(null);
   const handleLeave = useCallback(() => setConfig(null), []);
+
+  const handleStart = useCallback((next: LobbyConfig) => {
+    pendingConfigRef.current = next;
+    setBurning(true);
+  }, []);
+
+  const handleBurnComplete = useCallback(() => {
+    const next = pendingConfigRef.current;
+    if (next) {
+      setConfig(next);
+      pendingConfigRef.current = null;
+    }
+    setBurning(false);
+  }, []);
 
   const sessionConfig = useMemo(() => {
     if (!config) return null;
@@ -24,7 +41,7 @@ export default function App() {
       <BackgroundMusic />
       <div className="app-shell">
         {!config || !ClientComponent ? (
-          <Lobby onStart={setConfig} />
+          <Lobby onStart={handleStart} />
         ) : (
           <ClientComponent
             matchID={config.matchID ?? 'local'}
@@ -32,6 +49,7 @@ export default function App() {
           />
         )}
       </div>
+      {burning && <BurnTransition onComplete={handleBurnComplete} />}
     </>
   );
 }

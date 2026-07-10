@@ -77,7 +77,9 @@ export function Lobby({ onStart }: LobbyProps) {
   return (
     <div className="lobby-eventually">
       <header id="header">
-        <h1>Extreme Checkers</h1>
+        <h1 className="lobby-logo-glitch" data-glitch="Extreme Checkers">
+          Extreme Checkers
+        </h1>
         <p>
           2D overhead checkers with bombs, captures, and online multiplayer.
           <br />

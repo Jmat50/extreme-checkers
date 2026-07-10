@@ -1,0 +1,67 @@
+/* Adapted from https://codepen.io/simeydotme/pen/PoyzbPM */
+
+.burn-transition {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: all;
+  background: #0a0503;
+  transform-origin: bottom center;
+  transform: scaleY(0);
+  animation: burn-rise 1.15s cubic-bezier(0.42, 0, 0.58, 1) forwards;
+  overflow: hidden;
+}
+
+.burn-transition::before {
+  content: '';
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  top: 0;
+  height: min(42vh, 360px);
+  transform: translateY(-45%);
+  background-image: var(--burn-glitter), var(--burn-glitter),
+    linear-gradient(
+      0deg,
+      white 0px,
+      #ff8951 5px,
+      #dcbc169c 30%,
+      transparent 70%
+    ),
+    radial-gradient(ellipse at bottom, transparent 30%, black 60%);
+  background-size: 350px 500px, 400px 650px, 100% 100%, 100% 100%;
+  background-blend-mode: hard-light, color-dodge, multiply;
+  background-position: center 0px, center 0px, 50% 100%, center center;
+  background-repeat: repeat, repeat, repeat, no-repeat;
+  mix-blend-mode: color-dodge;
+  filter: brightness(3.7) blur(7px) contrast(6);
+  animation: burn-fire-flicker 0.4s linear infinite;
+  box-shadow: inset 0 -40px 50px -60px #63bbc5;
+}
+
+@keyframes burn-rise {
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes burn-fire-flicker {
+  0% {
+    background-position: center 0px, center 0px, 50% 100%, center center;
+  }
+
+  100% {
+    background-position: center -120px, center -150px, 50% 100%, center center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burn-transition {
+    animation: none;
+    transform: scaleY(1);
+  }
+
+  .burn-transition::before {
+    animation: none;
+  }
+}

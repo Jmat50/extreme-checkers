@@ -76,13 +76,15 @@ export function GameUI({
 
       <div className="status-panel">
         <div
-          className={`player-card red${redActive ? ' player-card--active' : ''}`}
-          style={{ backgroundImage: `url(${ASSETS_2D.ui.panel})` }}
+          className={`cyber-player-btn${redActive ? ' cyber-player-btn--active' : ''}`}
+          aria-label={`${redName}, Red`}
         >
-          <span className="piece-dot red" />
-          <div>
-            <strong>{redName}</strong>
-            <small>Red</small>
+          <div className="cyber-player-btn__face">
+            <span className="cyber-player-btn__name">{redName}</span>
+            <span className="cyber-player-btn__glitch" aria-hidden>
+              {redName}
+            </span>
+            <span className="cyber-player-btn__tag">Red</span>
           </div>
         </div>
         <div className="turn-indicator">
@@ -95,13 +97,15 @@ export function GameUI({
           )}
         </div>
         <div
-          className={`player-card black${blackActive ? ' player-card--active' : ''}`}
-          style={{ backgroundImage: `url(${ASSETS_2D.ui.panel})` }}
+          className={`cyber-player-btn cyber-player-btn--black${blackActive ? ' cyber-player-btn--active' : ''}`}
+          aria-label={`${blackName}, Black`}
         >
-          <span className="piece-dot black" />
-          <div>
-            <strong>{blackName}</strong>
-            <small>Black</small>
+          <div className="cyber-player-btn__face">
+            <span className="cyber-player-btn__name">{blackName}</span>
+            <span className="cyber-player-btn__glitch" aria-hidden>
+              {blackName}
+            </span>
+            <span className="cyber-player-btn__tag">Black</span>
           </div>
         </div>
       </div>

@@ -37,52 +37,298 @@
   max-width: 720px;
 }
 
-.player-card {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  padding: 0.5rem 1rem;
-  background-color: rgba(0, 0, 0, 0.55);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #111;
-  opacity: 0.65;
-  transition: opacity 0.2s, border-color 0.2s, box-shadow 0.2s;
+/* From Uiverse.io by rubyreapergaming — https://uiverse.io/rubyreapergaming/yellow-pug-88 */
+.cyber-player-btn {
+  position: relative;
+  height: 42px;
+  min-width: 132px;
+  margin: 3px;
+  opacity: 0.78;
+  transition: opacity 0.2s ease;
 }
 
-.player-card--active {
+.cyber-player-btn--active {
   opacity: 1;
-  border-color: rgba(28, 180, 149, 0.65);
-  box-shadow: 0 0 12px rgba(28, 180, 149, 0.35);
 }
 
-.player-card strong {
-  display: block;
-  font-size: 0.95rem;
-}
+.cyber-player-btn__face {
+  --primary: #f5434f;
+  --shadow-primary: #631e29;
+  --color: #ffffff;
+  --font-size: 10px;
+  --shadow-secondary: #000000;
+  --clip: polygon(
+    11% 0,
+    95% 0,
+    100% 25%,
+    90% 90%,
+    95% 90%,
+    85% 90%,
+    85% 100%,
+    7% 100%,
+    0 80%
+  );
+  --border: 5px;
+  --shimmy-distance: 5;
+  --clip-one: polygon(
+    0 2%,
+    100% 2%,
+    100% 95%,
+    95% 95%,
+    95% 90%,
+    85% 90%,
+    85% 95%,
+    8% 95%,
+    0 70%
+  );
+  --clip-two: polygon(
+    0 78%,
+    100% 78%,
+    100% 100%,
+    95% 100%,
+    95% 90%,
+    85% 90%,
+    85% 100%,
+    8% 100%,
+    0 78%
+  );
+  --clip-three: polygon(
+    0 44%,
+    100% 44%,
+    100% 54%,
+    95% 54%,
+    95% 54%,
+    85% 54%,
+    85% 54%,
+    8% 54%,
+    0 54%
+  );
+  --clip-four: polygon(
+    0 0,
+    100% 0,
+    100% 0,
+    95% 0,
+    95% 0,
+    85% 0,
+    85% 0,
+    8% 0,
+    0 0
+  );
+  --clip-five: polygon(
+    0 0,
+    100% 0,
+    100% 0,
+    95% 0,
+    95% 0,
+    85% 0,
+    85% 0,
+    8% 0,
+    0 0
+  );
+  --clip-six: polygon(
+    0 40%,
+    100% 40%,
+    100% 85%,
+    95% 85%,
+    95% 85%,
+    85% 85%,
+    85% 85%,
+    8% 85%,
+    0 70%
+  );
+  --clip-seven: polygon(
+    0 63%,
+    100% 63%,
+    100% 80%,
+    95% 80%,
+    95% 80%,
+    85% 80%,
+    85% 80%,
+    8% 80%,
+    0 70%
+  );
 
-.player-card small {
-  color: rgba(0, 0, 0, 0.65);
+  color: var(--color);
   text-transform: uppercase;
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
+  font-size: var(--font-size);
+  letter-spacing: 2px;
+  position: relative;
+  font-weight: 900;
+  width: 100%;
+  height: 100%;
+  line-height: 42px;
+  text-align: center;
+  transition: background 0.2s, font-size 0.3s;
+  font-family: 'Orbitron', sans-serif;
+  padding: 0 0.75rem;
+  white-space: nowrap;
 }
 
-.piece-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.4);
+.cyber-player-btn--active .cyber-player-btn__face {
+  --primary: #161a25;
+  --shadow-primary: #ffffff;
 }
 
-.piece-dot.red {
-  background: radial-gradient(circle at 35% 30%, #ff6b5b, #8b1a1a);
+.cyber-player-btn--black .cyber-player-btn__face {
+  --primary: #161a25;
+  --shadow-primary: #4a4f5e;
+  --color: #e8e8e8;
 }
 
-.piece-dot.black {
-  background: radial-gradient(circle at 35% 30%, #555, #111);
+.cyber-player-btn--black.cyber-player-btn--active .cyber-player-btn__face {
+  --primary: #161a25;
+  --shadow-primary: #ffffff;
+}
+
+.cyber-player-btn__face::before,
+.cyber-player-btn__face::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  clip-path: var(--clip);
+  z-index: -1;
+}
+
+.cyber-player-btn__face::before {
+  background: var(--shadow-primary);
+  transform: translate(var(--border), 0);
+}
+
+.cyber-player-btn__face::after {
+  background: var(--primary);
+}
+
+.cyber-player-btn__name {
+  position: relative;
+  z-index: 1;
+}
+
+.cyber-player-btn__glitch {
+  position: absolute;
+  inset: calc(var(--border) * -1);
+  background: var(--shadow-primary);
+  text-shadow:
+    2px 2px var(--shadow-primary),
+    -2px -2px var(--shadow-secondary);
+  clip-path: var(--clip);
+  display: none;
+  line-height: 42px;
+  padding: 0 0.75rem;
+}
+
+.cyber-player-btn--active .cyber-player-btn__glitch {
+  display: block;
+  animation: cyber-player-btn-glitch 5s infinite;
+}
+
+.cyber-player-btn__glitch::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--border) * 1);
+  clip-path: var(--clip);
+  background: var(--primary);
+  z-index: -1;
+}
+
+.cyber-player-btn__tag {
+  background: var(--shadow-primary);
+  color: #323232;
+  font-size: 6px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  position: absolute;
+  width: 18px;
+  height: 7px;
+  top: 0;
+  right: 6%;
+  line-height: 7px;
+  z-index: 2;
+}
+
+@keyframes cyber-player-btn-glitch {
+  0% {
+    clip-path: var(--clip-one);
+  }
+
+  2%,
+  8% {
+    clip-path: var(--clip-two);
+    transform: translate(calc(var(--shimmy-distance) * -1%), 0);
+  }
+
+  6% {
+    clip-path: var(--clip-two);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+
+  9% {
+    clip-path: var(--clip-two);
+    transform: translate(0, 0);
+  }
+
+  10% {
+    clip-path: var(--clip-three);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+
+  13% {
+    clip-path: var(--clip-three);
+    transform: translate(0, 0);
+  }
+
+  14%,
+  21% {
+    clip-path: var(--clip-four);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+
+  25% {
+    clip-path: var(--clip-five);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+
+  30% {
+    clip-path: var(--clip-five);
+    transform: translate(calc(var(--shimmy-distance) * -1%), 0);
+  }
+
+  35%,
+  45% {
+    clip-path: var(--clip-six);
+    transform: translate(calc(var(--shimmy-distance) * -1%));
+  }
+
+  40% {
+    clip-path: var(--clip-six);
+    transform: translate(calc(var(--shimmy-distance) * 1%));
+  }
+
+  50% {
+    clip-path: var(--clip-six);
+    transform: translate(0, 0);
+  }
+
+  55% {
+    clip-path: var(--clip-seven);
+    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
+  }
+
+  60% {
+    clip-path: var(--clip-seven);
+    transform: translate(0, 0);
+  }
+
+  31%,
+  61%,
+  100% {
+    clip-path: var(--clip-four);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cyber-player-btn__glitch {
+    animation: none !important;
+  }
 }
 
 .turn-indicator {
