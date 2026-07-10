@@ -49,6 +49,11 @@
 
 .cyber-player-btn--active {
   opacity: 1;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.35));
+}
+
+.cyber-player-btn--active.cyber-player-btn--red {
+  filter: drop-shadow(0 0 10px rgba(245, 67, 79, 0.65));
 }
 
 .cyber-player-btn__face {
@@ -171,12 +176,6 @@
   --primary: #212121;
   --shadow-primary: #ffffff;
   --color: #ffffff;
-}
-
-.cyber-player-btn--active.cyber-player-btn--red .cyber-player-btn__face,
-.cyber-player-btn--active.cyber-player-btn--black .cyber-player-btn__face {
-  --primary: #161a25;
-  --shadow-primary: #ffffff;
 }
 
 .cyber-player-btn__face::before,
