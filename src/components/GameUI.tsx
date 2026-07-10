@@ -76,7 +76,7 @@ export function GameUI({
 
       <div className="status-panel">
         <div
-          className={`cyber-player-btn${redActive ? ' cyber-player-btn--active' : ''}`}
+          className={`cyber-player-btn cyber-player-btn--red${redActive ? ' cyber-player-btn--active' : ''}`}
           aria-label={`${redName}, Red`}
         >
           <div className="cyber-player-btn__face">
