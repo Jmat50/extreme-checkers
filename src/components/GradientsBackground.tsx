@@ -12,15 +12,6 @@ type BlobPalette = {
   interactive: Rgb;
 };
 
-const START_PALETTE: BlobPalette = {
-  c1: [18, 113, 255],
-  c2: [221, 74, 255],
-  c3: [100, 220, 255],
-  c4: [200, 50, 50],
-  c5: [180, 180, 50],
-  interactive: [140, 100, 255],
-};
-
 const RED_PALETTE: BlobPalette = {
   c1: [220, 45, 45],
   c2: [190, 35, 55],
@@ -37,15 +28,6 @@ const ORANGE_PALETTE: BlobPalette = {
   c4: [225, 100, 30],
   c5: [200, 85, 25],
   interactive: [255, 130, 45],
-};
-
-const GREEN_PALETTE: BlobPalette = {
-  c1: [45, 185, 75],
-  c2: [35, 165, 60],
-  c3: [65, 205, 95],
-  c4: [55, 145, 50],
-  c5: [85, 205, 85],
-  interactive: [55, 185, 75],
 };
 
 const PHASE_MS = 3 * 60 * 1000;
@@ -74,16 +56,11 @@ function easeInOut(t: number) {
 }
 
 function paletteAtTime(elapsedMs: number): BlobPalette {
-  if (elapsedMs < PHASE_MS) {
-    return lerpPalette(START_PALETTE, RED_PALETTE, easeInOut(elapsedMs / PHASE_MS));
-  }
-
-  const loopElapsed = elapsedMs - PHASE_MS;
-  const cycleMs = PHASE_MS * 3;
-  const cycleT = (loopElapsed % cycleMs) / PHASE_MS;
-  const palettes = [RED_PALETTE, ORANGE_PALETTE, GREEN_PALETTE];
-  const fromIndex = Math.floor(cycleT) % palettes.length;
-  const toIndex = (fromIndex + 1) % palettes.length;
+  const cycleMs = PHASE_MS * 2;
+  const cycleT = (elapsedMs % cycleMs) / PHASE_MS;
+  const fromIndex = Math.floor(cycleT) % 2;
+  const toIndex = (fromIndex + 1) % 2;
+  const palettes = [RED_PALETTE, ORANGE_PALETTE];
   const localT = easeInOut(cycleT - Math.floor(cycleT));
   return lerpPalette(palettes[fromIndex], palettes[toIndex], localT);
 }

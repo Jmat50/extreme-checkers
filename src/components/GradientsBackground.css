@@ -1,14 +1,14 @@
 /* Adapted from https://github.com/baunov/gradients-bg */
 
 :root {
-  --gradient-color-bg1: rgb(28, 0, 36);
-  --gradient-color-bg2: rgb(0, 4, 18);
-  --gradient-color1: 18, 113, 255;
-  --gradient-color2: 221, 74, 255;
-  --gradient-color3: 100, 220, 255;
-  --gradient-color4: 200, 50, 50;
-  --gradient-color5: 180, 180, 50;
-  --gradient-color-interactive: 140, 100, 255;
+  --gradient-color-bg1: rgb(28, 0, 8);
+  --gradient-color-bg2: rgb(12, 2, 0);
+  --gradient-color1: 220, 45, 45;
+  --gradient-color2: 190, 35, 55;
+  --gradient-color3: 255, 70, 50;
+  --gradient-color4: 210, 25, 25;
+  --gradient-color5: 150, 35, 35;
+  --gradient-color-interactive: 205, 55, 45;
   --gradient-circle-size: 80%;
   --gradient-blending: hard-light;
 }
