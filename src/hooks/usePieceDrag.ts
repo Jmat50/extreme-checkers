@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from 'react';
-import type { Cell, Piece, PieceColor, Position } from '../game/types';
+import type { Cell, Move, Piece, PieceColor, Position } from '../game/types';
 import { getValidMovesForSelection } from '../game/logic';
 
 const DRAG_THRESHOLD_PX = 8;
@@ -36,6 +36,7 @@ interface DragVisual {
   ghostY: number;
   active: boolean;
   validTargets: Set<string>;
+  legalMoves: Move[];
 }
 
 interface UsePieceDragOptions {
@@ -45,6 +46,8 @@ interface UsePieceDragOptions {
   playerColor: PieceColor | null;
   interactive: boolean;
   onSelectSquare: (row: number, col: number) => void;
+  /** Atomic commit for drag-drop (preferred for multiplayer). */
+  onCommitMove?: (move: Move) => void;
 }
 
 type DragPointerLike = {
@@ -68,15 +71,18 @@ export function usePieceDrag({
   playerColor,
   interactive,
   onSelectSquare,
+  onCommitMove,
 }: UsePieceDragOptions) {
   const [drag, setDrag] = useState<DragVisual | null>(null);
   const [hover, setHover] = useState<Position | null>(null);
   const onSelectRef = useRef(onSelectSquare);
+  const onCommitRef = useRef(onCommitMove);
   const activeDragPointerId = useRef<number | null>(null);
   const hoverRef = useRef<Position | null>(null);
   const wasActiveRef = useRef(false);
   const suppressSquareClicksUntil = useRef(0);
   onSelectRef.current = onSelectSquare;
+  onCommitRef.current = onCommitMove;
 
   const shouldSuppressSquareClick = useCallback(() => {
     return Date.now() < suppressSquareClicksUntil.current;
@@ -111,14 +117,14 @@ export function usePieceDrag({
       e.stopPropagation();
 
       const piece = board[row][col]!;
-      const validMoves = getValidMovesForSelection(
+      const legalMoves = getValidMovesForSelection(
         board,
         { row, col },
         playerColor,
         mustContinueFrom,
       );
       const validTargets = new Set(
-        validMoves.map((m) => `${m.to.row},${m.to.col}`),
+        legalMoves.map((m) => `${m.to.row},${m.to.col}`),
       );
       const from = { row, col };
       const origin = { x: e.clientX, y: e.clientY };
@@ -144,6 +150,7 @@ export function usePieceDrag({
         ghostY: e.clientY,
         active: false,
         validTargets,
+        legalMoves,
       };
       setDrag(visual);
       setHover(from);
@@ -216,12 +223,19 @@ export function usePieceDrag({
           dropKey != null &&
           validTargets.has(dropKey);
 
-        if (isValidDrop) {
+        if (isValidDrop && drop) {
           suppressSquareClicksUntil.current = Date.now() + 400;
-          onSelectRef.current(from.row, from.col);
-          queueMicrotask(() => {
-            onSelectRef.current(drop!.row, drop!.col);
-          });
+          const move = legalMoves.find(
+            (m) => m.to.row === drop.row && m.to.col === drop.col,
+          );
+          if (move && onCommitRef.current) {
+            onCommitRef.current(move);
+          } else {
+            onSelectRef.current(from.row, from.col);
+            queueMicrotask(() => {
+              onSelectRef.current(drop.row, drop.col);
+            });
+          }
         } else if (maxDist < DROP_THRESHOLD_PX) {
           onSelectRef.current(from.row, from.col);
         }

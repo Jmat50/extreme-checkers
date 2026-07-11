@@ -11,12 +11,16 @@ import {
   movesEqual,
 } from './logic';
 
+/** boardgame.io rejects moves that return this sentinel (see boardgame.io/core). */
+const INVALID_MOVE = 'INVALID_MOVE';
+
 export interface CheckersGameProps {
   G: CheckersState;
   ctx: { currentPlayer: string; gameover?: { winner: PieceColor } };
   playerID: string | null;
   moves: {
     selectSquare: (row: number, col: number) => void;
+    playMove: (move: Move) => void;
     clearSelection: () => void;
   };
   events: { endTurn: () => void };
@@ -41,18 +45,24 @@ export const CheckersGame: Game<CheckersState> = {
 
   setup: () => initialState(),
 
+  // Selection is multi-step UI state — only endTurn() after a real board move.
+  // Do not use maxMoves: select/reselect/deselect must not burn the turn.
   turn: {
-    minMoves: 1,
-    maxMoves: 2,
+    onEnd: ({ G }) => ({
+      ...G,
+      selected: null,
+      validMoves: [],
+      mustContinueFrom: null,
+    }),
   },
 
   moves: {
     selectSquare({ G, ctx, playerID, events }, row: number, col: number) {
-      if (G.winner) return G;
-      if (!isPlayersTurn(ctx, playerID)) return G;
+      if (G.winner) return INVALID_MOVE;
+      if (!isPlayersTurn(ctx, playerID)) return INVALID_MOVE;
 
       const color = currentColor(ctx);
-      if (!color) return G;
+      if (!color) return INVALID_MOVE;
 
       const pos = { row, col };
       const piece = G.board[row][col];
@@ -62,7 +72,7 @@ export const CheckersGame: Game<CheckersState> = {
           Boolean(G.mustContinueFrom) ||
           (G.selected != null &&
             G.validMoves.some((m) => m.to.row === row && m.to.col === col));
-        if (!isValidTarget) return G;
+        if (!isValidTarget) return INVALID_MOVE;
       }
 
       const finishMove = (next: CheckersState) => {
@@ -75,7 +85,7 @@ export const CheckersGame: Game<CheckersState> = {
         const mustMove = G.validMoves.find(
           (m) => m.to.row === row && m.to.col === col,
         );
-        if (!mustMove) return G;
+        if (!mustMove) return INVALID_MOVE;
         return finishMove(executeMove(G, mustMove));
       }
 
@@ -94,6 +104,9 @@ export const CheckersGame: Game<CheckersState> = {
             color,
             G.mustContinueFrom,
           );
+          if (filtered.length === 0) {
+            return { ...G, selected: null, validMoves: [] };
+          }
           return { ...G, selected: pos, validMoves: filtered };
         }
 
@@ -101,7 +114,7 @@ export const CheckersGame: Game<CheckersState> = {
       }
 
       if (!piece) {
-        return { ...G, selected: null, validMoves: [] };
+        return INVALID_MOVE;
       }
 
       const filtered = getValidMovesForSelection(
@@ -112,22 +125,22 @@ export const CheckersGame: Game<CheckersState> = {
       );
 
       if (filtered.length === 0) {
-        return { ...G, selected: null, validMoves: [] };
+        return INVALID_MOVE;
       }
 
       return { ...G, selected: pos, validMoves: filtered };
     },
 
     playMove({ G, ctx, playerID, events }, move: Move) {
-      if (G.winner) return G;
-      if (!isPlayersTurn(ctx, playerID)) return G;
+      if (G.winner) return INVALID_MOVE;
+      if (!isPlayersTurn(ctx, playerID)) return INVALID_MOVE;
 
       const color = currentColor(ctx);
-      if (!color) return G;
+      if (!color) return INVALID_MOVE;
 
       const allMoves = getAllMoves(G.board, color);
       const valid = allMoves.find((m) => movesEqual(m, move));
-      if (!valid) return G;
+      if (!valid) return INVALID_MOVE;
 
       let next = applyAiMove(G, valid);
       if (next.mustContinueFrom) return next;
@@ -136,14 +149,19 @@ export const CheckersGame: Game<CheckersState> = {
     },
 
     clearSelection({ G }) {
-      if (G.mustContinueFrom) return G;
+      if (G.mustContinueFrom) return INVALID_MOVE;
+      if (!G.selected && G.validMoves.length === 0) return INVALID_MOVE;
       return { ...G, selected: null, validMoves: [] };
     },
   },
 
-  endIf: ({ G }) => {
+  endIf: ({ G, ctx }) => {
     if (G.winner) {
       return { winner: G.winner };
+    }
+    const color = currentColor(ctx);
+    if (color && getAllMoves(G.board, color).length === 0) {
+      return { winner: color === 'red' ? 'black' : 'red' };
     }
     return undefined;
   },

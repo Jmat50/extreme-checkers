@@ -92,7 +92,7 @@ export async function createAndJoin(
     unlisted: Boolean(options.unlisted),
   });
   const joined = await lobby.joinMatch(GAME_NAME, matchID, {
-    playerName: playerName.trim() || 'Player',
+    playerName: playerName.trim() || 'Name',
     playerID: '0',
   });
   return {
@@ -107,7 +107,7 @@ export async function joinOpenMatch(
   playerName: string,
 ): Promise<SeatSession> {
   const joined = await getLobbyClient().joinMatch(GAME_NAME, matchID.trim(), {
-    playerName: playerName.trim() || 'Player',
+    playerName: playerName.trim() || 'Name',
   });
   return {
     matchID: matchID.trim(),

@@ -76,7 +76,7 @@ export function OnlineLobby({
       });
       onStart({
         mode: 'online',
-        playerName: playerName.trim() || 'Player',
+        playerName: playerName.trim() || 'Name',
         matchID: session.matchID,
         playerID: session.playerID,
         credentials: session.credentials,
@@ -102,7 +102,7 @@ export function OnlineLobby({
         });
         onStart({
           mode: 'online',
-          playerName: playerName.trim() || 'Player',
+          playerName: playerName.trim() || 'Name',
           matchID: session.matchID,
           playerID: session.playerID,
           credentials: session.credentials,
@@ -205,11 +205,11 @@ export function OnlineLobby({
         <input
           type="text"
           name="playerName"
-          placeholder="Your name"
+          placeholder="Name"
           value={playerName}
           onChange={(e) => onPlayerNameChange(e.target.value)}
           maxLength={20}
-          aria-label="Your name"
+          aria-label="Name"
         />
         <button
           type="button"

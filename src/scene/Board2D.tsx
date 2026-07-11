@@ -1,5 +1,5 @@
 import { useMemo, useRef } from 'react';
-import { CheckersState, Move, PieceColor } from '../game/types';
+import { CheckersState, Move, PieceColor, Position } from '../game/types';
 import { getHazardSquares } from '../game/logic';
 import { useConfigStore } from '../config/configStore';
 import { useExplosionBursts } from '../hooks/useExplosionBursts';
@@ -13,14 +13,22 @@ import './Board2D.css';
 
 interface Board2DProps {
   G: CheckersState;
+  /** Client-side selection (overrides G.selected when provided). */
+  selected?: Position | null;
+  /** Client-side legal targets (overrides G.validMoves when provided). */
+  validMoves?: Move[];
   onSelectSquare: (row: number, col: number) => void;
+  onCommitMove?: (move: Move) => void;
   interactive: boolean;
   playerColor: PieceColor | null;
 }
 
 export function Board2D({
   G,
+  selected: selectedProp,
+  validMoves: validMovesProp,
   onSelectSquare,
+  onCommitMove,
   interactive,
   playerColor,
 }: Board2DProps) {
@@ -31,9 +39,12 @@ export function Board2D({
   const startRed = useConfigStore((s) => s.config.rules.startRed);
   const startBlack = useConfigStore((s) => s.config.rules.startBlack);
 
+  const selected = selectedProp !== undefined ? selectedProp : G.selected;
+  const moveList = validMovesProp ?? G.validMoves;
+
   const validTargets = useMemo(
-    () => new Set(G.validMoves.map((m: Move) => `${m.to.row},${m.to.col}`)),
-    [G.validMoves],
+    () => new Set(moveList.map((m: Move) => `${m.to.row},${m.to.col}`)),
+    [moveList],
   );
 
   const { bursts, removeBurst } = useExplosionBursts(G.eliminationFlash, G.lastEliminations);
@@ -56,6 +67,7 @@ export function Board2D({
     playerColor: isEditing ? null : playerColor,
     interactive: boardInteractive && !isEditing,
     onSelectSquare,
+    onCommitMove,
   });
 
   const dragValidTargets = drag?.validTargets ?? null;
@@ -109,7 +121,7 @@ export function Board2D({
     if (editMode === 'startBlack' && startBlackSet.has(key)) return 'edit-black';
     if (
       !isEditing &&
-      ((G.selected?.row === row && G.selected?.col === col) ||
+      ((selected?.row === row && selected?.col === col) ||
         (dragFrom?.row === row && dragFrom?.col === col))
     ) {
       return 'selected';
@@ -188,7 +200,7 @@ export function Board2D({
                 color={cell.color}
                 king={cell.king}
                 selected={
-                  (G.selected?.row === r && G.selected?.col === c) ||
+                  (selected?.row === r && selected?.col === c) ||
                   (dragFrom?.row === r && dragFrom?.col === c)
                 }
                 pieceSizeRatio={sceneConfig.pieceSizeRatio}

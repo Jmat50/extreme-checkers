@@ -56,16 +56,19 @@ function easeInOut(t: number) {
 }
 
 function paletteAtTime(elapsedMs: number): BlobPalette {
-  const cycleMs = PHASE_MS * 2;
-  const cycleT = (elapsedMs % cycleMs) / PHASE_MS;
-  const fromIndex = Math.floor(cycleT) % 2;
-  const toIndex = (fromIndex + 1) % 2;
   const palettes = [RED_PALETTE, ORANGE_PALETTE];
+  const safeElapsed = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) : 0;
+  const cycleMs = PHASE_MS * 2;
+  const cycleT = (safeElapsed % cycleMs) / PHASE_MS;
+  // cycleT is in [0, 2); clamp so float noise never indexes past the palette list.
+  const fromIndex = cycleT < 1 ? 0 : 1;
+  const toIndex = 1 - fromIndex;
   const localT = easeInOut(cycleT - Math.floor(cycleT));
   return lerpPalette(palettes[fromIndex], palettes[toIndex], localT);
 }
 
 function applyPalette(palette: BlobPalette) {
+  if (!palette?.c1) return;
   const root = document.documentElement;
   root.style.setProperty('--gradient-color1', palette.c1.join(', '));
   root.style.setProperty('--gradient-color2', palette.c2.join(', '));

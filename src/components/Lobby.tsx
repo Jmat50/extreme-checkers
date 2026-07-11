@@ -20,7 +20,7 @@ interface LobbyProps {
 }
 
 export function Lobby({ onStart }: LobbyProps) {
-  const [playerName, setPlayerName] = useState('Player');
+  const [playerName, setPlayerName] = useState('Name');
   const [view, setView] = useState<'menu' | 'online'>('menu');
   const onlineAvailable = isOnlineMultiplayerConfigured();
 
@@ -59,11 +59,11 @@ export function Lobby({ onStart }: LobbyProps) {
           type="text"
           name="playerName"
           id="player-name"
-          placeholder="Your name"
+          placeholder="Name"
           value={playerName}
           onChange={(e) => setPlayerName(e.target.value)}
           maxLength={20}
-          aria-label="Your name"
+          aria-label="Name"
         />
         <button
           type="button"

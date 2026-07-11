@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { BoardProps } from 'boardgame.io/react';
-import { CheckersState } from '../game/types';
+import { CheckersState, Move, Position } from '../game/types';
 import { Board2D } from '../scene/Board2D';
 import { GameUI } from './GameUI';
 import { useSound } from '../hooks/useSound';
 import type { GameMode } from './Lobby';
 import { IS_EDITOR } from '../config/editorMode';
 import { useConfigStore } from '../config/configStore';
-import { isDarkSquare } from '../game/logic';
+import { getValidMovesForSelection, isDarkSquare } from '../game/logic';
 import { PLAYER_COLORS } from '../game/game';
 import './GameBoard.css';
 
@@ -23,6 +23,7 @@ export function GameBoard({
   ctx,
   playerID,
   moves,
+  isActive,
   mode,
   playerName,
   opponentName,
@@ -34,6 +35,11 @@ export function GameBoard({
   const toggleHazard = useConfigStore((s) => s.toggleHazard);
   const toggleStartRed = useConfigStore((s) => s.toggleStartRed);
   const toggleStartBlack = useConfigStore((s) => s.toggleStartBlack);
+
+  // Selection is client-only (boardgame.io multiplayer guidance): only commit
+  // atomic playMove to the master. Two-step selectSquare races on SocketIO.
+  const [selected, setSelected] = useState<Position | null>(null);
+  const [validMoves, setValidMoves] = useState<Move[]>([]);
 
   useEffect(() => {
     if (G.lastMove === lastMoveRef.current) return;
@@ -50,10 +56,21 @@ export function GameBoard({
     if (ctx.gameover?.winner || G.winner) playWin();
   }, [ctx.gameover, G.winner, playWin]);
 
+  useEffect(() => {
+    setSelected(null);
+    setValidMoves([]);
+  }, [ctx.currentPlayer, ctx.gameover]);
+
+  useEffect(() => {
+    if (!G.mustContinueFrom) return;
+    setSelected(G.mustContinueFrom);
+    setValidMoves(G.validMoves);
+  }, [G.mustContinueFrom, G.validMoves]);
+
   const playInteractive =
     mode === 'local' ||
-    (mode === 'ai' && ctx.currentPlayer === playerID) ||
-    (mode === 'online' && ctx.currentPlayer === playerID);
+    (mode === 'ai' && (isActive || ctx.currentPlayer === playerID)) ||
+    (mode === 'online' && (isActive || ctx.currentPlayer === playerID));
 
   const interactive = IS_EDITOR ? editMode === 'play' && playInteractive : playInteractive;
 
@@ -61,6 +78,16 @@ export function GameBoard({
     interactive && !ctx.gameover
       ? (PLAYER_COLORS[ctx.currentPlayer] ?? null)
       : null;
+
+  const commitMove = useCallback(
+    (move: Move) => {
+      if (!interactive || ctx.gameover) return;
+      moves.playMove(move);
+      setSelected(null);
+      setValidMoves([]);
+    },
+    [interactive, ctx.gameover, moves],
+  );
 
   const handleSelect = useCallback(
     (row: number, col: number) => {
@@ -71,8 +98,40 @@ export function GameBoard({
         else if (editMode === 'startBlack') toggleStartBlack(row, col);
         return;
       }
-      if (!interactive || ctx.gameover) return;
-      moves.selectSquare(row, col);
+      if (!interactive || ctx.gameover || !playerColor) return;
+
+      const pos = { row, col };
+
+      if (selected) {
+        const chosen = validMoves.find(
+          (m) => m.to.row === row && m.to.col === col,
+        );
+        if (chosen) {
+          commitMove(chosen);
+          return;
+        }
+      }
+
+      const piece = G.board[row]?.[col];
+      if (piece && piece.color === playerColor) {
+        const filtered = getValidMovesForSelection(
+          G.board,
+          pos,
+          playerColor,
+          G.mustContinueFrom,
+        );
+        if (filtered.length === 0) {
+          setSelected(null);
+          setValidMoves([]);
+          return;
+        }
+        setSelected(pos);
+        setValidMoves(filtered);
+        return;
+      }
+
+      setSelected(null);
+      setValidMoves([]);
     },
     [
       editMode,
@@ -81,7 +140,12 @@ export function GameBoard({
       toggleStartBlack,
       interactive,
       ctx.gameover,
-      moves,
+      playerColor,
+      selected,
+      validMoves,
+      G.board,
+      G.mustContinueFrom,
+      commitMove,
     ],
   );
 
@@ -101,7 +165,10 @@ export function GameBoard({
       <div className="board-2d-wrapper">
         <Board2D
           G={G}
+          selected={selected}
+          validMoves={validMoves}
           onSelectSquare={handleSelect}
+          onCommitMove={commitMove}
           interactive={interactive}
           playerColor={playerColor}
         />
