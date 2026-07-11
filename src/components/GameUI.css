@@ -209,14 +209,12 @@
     2px 2px var(--shadow-primary),
     -2px -2px var(--shadow-secondary);
   clip-path: var(--clip);
-  display: none;
+  display: block;
+  opacity: 0;
   line-height: 42px;
   padding: 0 0.75rem;
-}
-
-.cyber-player-btn--active .cyber-player-btn__glitch {
-  display: block;
-  animation: cyber-player-btn-glitch 5s infinite;
+  pointer-events: none;
+  animation: cyber-player-btn-glitch 5s linear infinite;
 }
 
 .cyber-player-btn__glitch::before {
@@ -243,89 +241,69 @@
   z-index: 2;
 }
 
+/* Short glitch burst once every 5s (~0.6s active, then idle). */
 @keyframes cyber-player-btn-glitch {
-  0% {
+  0%,
+  12%,
+  100% {
+    opacity: 0;
+    clip-path: var(--clip);
+    transform: translate(0, 0);
+  }
+
+  1% {
+    opacity: 1;
     clip-path: var(--clip-one);
+    transform: translate(0, 0);
   }
 
-  2%,
-  8% {
+  2.5% {
+    opacity: 1;
     clip-path: var(--clip-two);
     transform: translate(calc(var(--shimmy-distance) * -1%), 0);
   }
 
-  6% {
+  4% {
+    opacity: 1;
     clip-path: var(--clip-two);
     transform: translate(calc(var(--shimmy-distance) * 1%), 0);
   }
 
-  9% {
-    clip-path: var(--clip-two);
-    transform: translate(0, 0);
-  }
-
-  10% {
+  5.5% {
+    opacity: 1;
     clip-path: var(--clip-three);
     transform: translate(calc(var(--shimmy-distance) * 1%), 0);
   }
 
-  13% {
-    clip-path: var(--clip-three);
-    transform: translate(0, 0);
-  }
-
-  14%,
-  21% {
-    clip-path: var(--clip-four);
-    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
-  }
-
-  25% {
-    clip-path: var(--clip-five);
-    transform: translate(calc(var(--shimmy-distance) * 1%), 0);
-  }
-
-  30% {
-    clip-path: var(--clip-five);
-    transform: translate(calc(var(--shimmy-distance) * -1%), 0);
-  }
-
-  35%,
-  45% {
+  7% {
+    opacity: 1;
     clip-path: var(--clip-six);
     transform: translate(calc(var(--shimmy-distance) * -1%));
   }
 
-  40% {
-    clip-path: var(--clip-six);
-    transform: translate(calc(var(--shimmy-distance) * 1%));
-  }
-
-  50% {
-    clip-path: var(--clip-six);
-    transform: translate(0, 0);
-  }
-
-  55% {
+  8.5% {
+    opacity: 1;
     clip-path: var(--clip-seven);
     transform: translate(calc(var(--shimmy-distance) * 1%), 0);
   }
 
-  60% {
-    clip-path: var(--clip-seven);
+  10% {
+    opacity: 1;
+    clip-path: var(--clip);
     transform: translate(0, 0);
   }
 
-  31%,
-  61%,
-  100% {
-    clip-path: var(--clip-four);
+  11% {
+    opacity: 0;
+    clip-path: var(--clip);
+    transform: translate(0, 0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cyber-player-btn__glitch {
     animation: none !important;
+    opacity: 0 !important;
   }
 }
 

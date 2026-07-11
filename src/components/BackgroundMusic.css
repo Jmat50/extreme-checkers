@@ -1,44 +1,119 @@
-.background-music-toggle {
+/* Knob adapted from https://uiverse.io/SelfMadeSystem/grumpy-deer-99 */
+
+.music-knob {
   position: fixed;
   right: 1rem;
   bottom: 1rem;
   z-index: 100;
-  display: inline-flex;
+  width: 108px;
+  height: 108px;
+  display: flex;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 0.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 999px;
-  background: rgba(12, 8, 28, 0.78);
-  color: #f5e6d3;
-  font: inherit;
-  font-size: 0.85rem;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.music-knob__clock,
+.clock-input {
+  display: flex;
+  position: relative;
+  width: 64px;
+  height: 64px;
+  --a: #0004, #fff4;
+  --b: var(--a), var(--a), var(--a);
+  --c: var(--b), var(--b), var(--b);
+  background:
+    conic-gradient(
+      from -2deg,
+      #efefff88,
+      #00000088,
+      #efefff88,
+      #00000088,
+      #efefff88
+    ),
+    radial-gradient(var(--c), var(--c)),
+    radial-gradient(circle at 12% 12%, #efefff, #9999a4);
+  background-size: calc(100% + 8px) calc(100% + 8px);
+  background-position: -4px -4px;
+  border: 4px solid #0005;
+  border-radius: 50%;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+}
+
+.music-knob__dial,
+.dial {
+  position: absolute;
+  width: 28px;
+  height: 4px;
+  border-radius: 99px;
+  background-color: #000b;
+  top: calc(50% - 2px);
+  left: calc(50% - 2px);
+  transform-origin: 2px 50%;
+  pointer-events: none;
+  transition: transform 0.15s ease;
+  z-index: 1;
+}
+
+.music-knob__notch,
+.notch {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 2px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
-  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateX(42px);
+  z-index: 2;
 }
 
-.background-music-toggle:hover {
-  background: rgba(24, 16, 48, 0.9);
-  border-color: rgba(255, 255, 255, 0.55);
+.music-knob__notch::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 8px;
+  height: 1px;
+  background-color: #fffc;
+  transform: translateY(-50%);
+  pointer-events: none;
 }
 
-.background-music-toggle:active {
-  transform: scale(0.97);
-}
-
-.background-music-toggle:focus-visible {
-  outline: 2px solid #c9a86c;
-  outline-offset: 2px;
-}
-
-.background-music-toggle__icon {
-  font-size: 0.95rem;
+.music-knob__label {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   line-height: 1;
+  white-space: nowrap;
+  transform: translateY(-50%) rotate(var(--label-angle));
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
 }
 
-.background-music-toggle__label {
-  font-weight: 500;
-  letter-spacing: 0.02em;
+.music-knob__notch--active .music-knob__label {
+  color: #fff;
+  text-shadow:
+    0 0 6px rgba(255, 255, 255, 0.55),
+    0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.music-knob__notch:focus-visible {
+  outline: none;
+}
+
+.music-knob__notch:focus-visible .music-knob__label {
+  color: #c9a86c;
+}
+
+.music-knob__notch:hover .music-knob__label {
+  color: #fff;
 }
