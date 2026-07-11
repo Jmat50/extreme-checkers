@@ -4,6 +4,7 @@ import { GradientsBackground } from './components/GradientsBackground';
 import { BackgroundMusic } from './components/BackgroundMusic';
 import { BurnTransition } from './components/BurnTransition';
 import { createGameClient } from './client';
+import { leaveSeat } from './lobby/lobbyClient';
 
 export default function App() {
   const [config, setConfig] = useState<LobbyConfig | null>(null);
@@ -27,7 +28,22 @@ export default function App() {
 
   const sessionConfig = useMemo(() => {
     if (!config) return null;
-    return { ...config, onLeave: handleLeave };
+    return {
+      ...config,
+      onLeave: () => {
+        if (
+          config.mode === 'online' &&
+          config.matchID &&
+          config.playerID &&
+          config.credentials
+        ) {
+          void leaveSeat(config.matchID, config.playerID, config.credentials).catch(
+            () => undefined,
+          );
+        }
+        handleLeave();
+      },
+    };
   }, [config, handleLeave]);
 
   const ClientComponent = useMemo(() => {
@@ -46,6 +62,7 @@ export default function App() {
           <ClientComponent
             matchID={config.matchID ?? 'local'}
             playerID={config.mode === 'local' ? undefined : config.playerID ?? '0'}
+            credentials={config.credentials}
           />
         )}
       </div>

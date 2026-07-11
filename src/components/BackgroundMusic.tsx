@@ -2,10 +2,9 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { assetUrl } from '../utils/assets';
 import './BackgroundMusic.css';
 
-/** 0 = OFF, 1–2 = active tracks (layout still uses 7-slot angles). */
-export type MusicSelection = 0 | 1 | 2;
+/** 0 = OFF, 1–6 = active tracks (7-slot dial). */
+export type MusicSelection = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
-/** Keep original 7-slot spacing so OFF/1/2 stay at the same angles. */
 const LAYOUT_SLOT_COUNT = 7;
 const STEP_DEG = 360 / LAYOUT_SLOT_COUNT;
 /** Dial 0deg points at 3 o'clock; -90deg is 12 o'clock (OFF). */
@@ -15,9 +14,13 @@ const TRACKS: { id: MusicSelection; label: string; src: string | null }[] = [
   { id: 0, label: 'OFF', src: null },
   { id: 1, label: '1', src: assetUrl('assets/audio/background.mp3') },
   { id: 2, label: '2', src: assetUrl('assets/audio/track-2-pocket-tanks.mp3') },
+  { id: 3, label: '3', src: assetUrl('assets/audio/track-3-scape-main.ogg') },
+  { id: 4, label: '4', src: assetUrl('assets/audio/track-4-newbie-melody.mp3') },
+  { id: 5, label: '5', src: assetUrl('assets/audio/track-5-sea-shanty-2.mp3') },
+  { id: 6, label: '6', src: assetUrl('assets/audio/track-6-autumn-voyage.mp3') },
 ];
 
-const SELECTION_ORDER: MusicSelection[] = [0, 1, 2];
+const SELECTION_ORDER: MusicSelection[] = [0, 1, 2, 3, 4, 5, 6];
 
 const STORAGE_KEY = 'extreme-checkers-music-selection';
 
@@ -30,6 +33,10 @@ function nextSelection(current: MusicSelection): MusicSelection {
   return SELECTION_ORDER[(idx + 1) % SELECTION_ORDER.length];
 }
 
+function isMusicSelection(n: number): n is MusicSelection {
+  return Number.isInteger(n) && n >= 0 && n <= 6;
+}
+
 function readStoredSelection(): MusicSelection {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -39,9 +46,7 @@ function readStoredSelection(): MusicSelection {
       return 1;
     }
     const n = Number(stored);
-    if (n === 0 || n === 1 || n === 2) return n;
-    // Old 3–6 selections fall back to track 1
-    if (Number.isInteger(n) && n >= 3 && n <= 6) return 1;
+    if (isMusicSelection(n)) return n;
   } catch {
     /* ignore */
   }

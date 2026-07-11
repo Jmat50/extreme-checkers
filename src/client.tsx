@@ -14,7 +14,9 @@ export function createGameClient(config: LobbyConfig) {
       {...props}
       mode={config.mode}
       playerName={config.playerName}
-      opponentName={config.mode === 'ai' ? 'AI' : 'Opponent'}
+      opponentName={
+        config.mode === 'ai' ? 'AI' : config.opponentName ?? 'Opponent'
+      }
       onLeave={() => config.onLeave?.()}
     />
   );

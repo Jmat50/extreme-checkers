@@ -43,7 +43,7 @@ GitHub Pages cannot run Node.js or WebSockets. The Render service handles online
 ### Render free tier notes
 
 - Services **spin down after 15 minutes** without HTTP or WebSocket traffic (~1 minute to wake).
-- Filesystem is **ephemeral** — match storage and in-memory lobbies reset on redeploy/restart.
+- Filesystem is **ephemeral** — FlatFile match storage under `STORAGE_DIR` resets on redeploy/restart, so the public lobby list clears with the instance.
 - Fine for demos and casual play; not for production scale.
 
 ---
@@ -58,14 +58,14 @@ GitHub Pages cannot run Node.js or WebSockets. The Render service handles online
 
 The workflow passes `GAME_SERVER_URL` into the Vite build as `VITE_GAME_SERVER_URL`. The client uses it for:
 
-- Lobby REST calls (`/api/lobbies`)
+- boardgame.io Lobby API (`/games/*` — list, create, join matches)
 - boardgame.io `SocketIO` multiplayer sync
 
 ---
 
 ## 3. Local development
 
-No Render URL needed for local work — Vite proxies API and Socket.IO to port 8000:
+No Render URL needed for local work — Vite proxies `/api`, `/games`, and Socket.IO to port 8000. Online Multiplayer Lobby is enabled automatically on localhost.
 
 ```bash
 npm run dev:all
@@ -73,6 +73,7 @@ npm run dev:all
 
 - Client: http://localhost:5173
 - Server: http://localhost:8000
+- Lobby list: `GET http://localhost:8000/games/extreme-checkers?isGameover=false`
 
 To test a production-style build against Render locally:
 
@@ -103,9 +104,10 @@ boardgame.io applies CORS for both the lobby API and Socket.IO when origins matc
 |---------|-----|
 | Render deploy fails immediately on start | Check logs for `import.meta.env` errors. Shared game code must use `import.meta.env?.VAR` so Node/tsx can load it. Redeploy latest `main`. |
 | Online buttons disabled on Pages | Set `GAME_SERVER_URL` repo variable and redeploy Pages |
-| `Failed to create lobby` / CORS error | Confirm `ALLOWED_ORIGINS` includes `https://jmat50.github.io` on Render |
-| Long wait before first online game | Render free tier cold start — wait ~1 minute |
-| Game disconnects mid-match | Render may restart free instances; refresh and rejoin |
+| Failed to create/list matches / CORS error | Confirm `ALLOWED_ORIGINS` includes `https://jmat50.github.io` on Render |
+| Long wait before first online game | Render free tier cold start — wait ~1 minute, then refresh the lobby list |
+| Empty lobby after server restart | Expected on free tier — FlatFile storage under `/tmp` is ephemeral |
+| Game disconnects mid-match | Render may restart free instances; return to lobby and create/join again |
 | `/api/health` 404 | Server not deployed or wrong start command (`npm run start:server`) |
 
 ---

@@ -10,7 +10,14 @@ export function apiUrl(path: string): string {
   return `${getGameServerUrl()}${normalized}`;
 }
 
-/** True when the build was wired to a remote game server (e.g. Render). */
+/**
+ * True when online multiplayer can be used:
+ * - Production Pages builds with VITE_GAME_SERVER_URL, or
+ * - Localhost / Vite proxy (dev:all) without an env var.
+ */
 export function isOnlineMultiplayerConfigured(): boolean {
-  return Boolean(import.meta.env.VITE_GAME_SERVER_URL?.trim());
+  if (import.meta.env.VITE_GAME_SERVER_URL?.trim()) return true;
+  if (typeof window === 'undefined') return false;
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1';
 }

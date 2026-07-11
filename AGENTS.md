@@ -15,7 +15,8 @@
 | Game rules | `src/game/` | Shared between client and server — **must run in Node** |
 | 2D board UI | `src/scene/Board2D.tsx` | CSS Grid squares + piece sprites; drag via `src/hooks/usePieceDrag.ts` |
 | Lobby / shell | `src/components/Lobby.tsx`, `src/App.tsx` | Kenney UI assets |
-| Game server | `server/index.ts` | boardgame.io `Server`, lobby REST, Socket.IO |
+| Game server | `server/index.ts` | boardgame.io `Server`, built-in `/games` Lobby API, Socket.IO |
+| Online lobby UI | `src/components/OnlineLobby.tsx`, `src/lobby/` | `LobbyClient` list/create/join + credentials |
 | Editor (dev only) | `src/editor/`, `electron/` | Leva panel; `VITE_EDITOR_MODE=true`; not shipped to Pages |
 
 ## Deployment
@@ -46,6 +47,8 @@
 - `src/game/logic.ts` — board state, move generation, hazards
 - `src/config/gameConfig.ts` — tunable rules/scene defaults
 - `src/config/serverUrl.ts` — `VITE_GAME_SERVER_URL` for production client
+- `src/lobby/lobbyClient.ts` — boardgame.io `LobbyClient` helpers
+- `src/components/OnlineLobby.tsx` — public match browser / waiting room
 - `src/client.tsx` — SocketIO server URL wiring
 - `render.yaml` — Render blueprint
 

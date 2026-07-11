@@ -77,7 +77,7 @@ Optional: copy [`.env.example`](.env.example) to `.env.local` and set `VITE_GAME
 
 - **Local 2-Player** — hot-seat on one machine (drag or click to move)
 - **Play vs AI** — offline with boardgame.io bot
-- **Create / Join Online** — multiplayer via Socket.IO (Render in production, local server in dev)
+- **Online Multiplayer Lobby** — public match browser via boardgame.io Lobby API + Socket.IO (Render in production, local server in dev). Create a public match for others to join from the list, or create a private match and share its match ID.
 
 ## Project layout
 
@@ -86,7 +86,8 @@ Optional: copy [`.env.example`](.env.example) to `.env.local` and set `VITE_GAME
 | `src/game/` | Rules, board state, AI — shared with server |
 | `src/scene/` | 2D board, pieces, VFX sprites |
 | `src/hooks/usePieceDrag.ts` | Drag-and-drop movement |
-| `server/index.ts` | Multiplayer server + lobby API |
+| `server/index.ts` | Multiplayer server (boardgame.io Lobby + Socket.IO) |
+| `src/lobby/` | LobbyClient helpers for public match list/create/join |
 | `docs/DEPLOYMENT.md` | Full Pages + Render guide |
 | `AGENTS.md` | Architecture notes for coding agents |
 
