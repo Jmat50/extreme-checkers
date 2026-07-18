@@ -16,13 +16,7 @@ async function turnSide(page) {
   return 'unknown';
 }
 
-async function playOneMove(page) {
-  const piece = page.locator('.piece-sprite--draggable').first();
-  await piece.waitFor({ timeout: 5000 });
-  const fromGrid = await piece.evaluate((el) => el.style.gridArea);
-  await piece.click();
-  await page.waitForSelector('.board-square__highlight', { timeout: 3000 });
-
+async function clickOneHop(page, fromGrid) {
   const targets = page.locator('button.board-square').filter({
     has: page.locator('.board-square__highlight'),
   });
@@ -33,9 +27,26 @@ async function playOneMove(page) {
     if (label === `Square ${fromGrid.replace(' / ', ', ')}`) continue;
     await btn.click();
     await page.waitForTimeout(150);
-    return fromGrid;
+    return label.replace('Square ', '').replace(', ', ' / ');
   }
   throw new Error(`No destination for piece at ${fromGrid}`);
+}
+
+async function playOneMove(page) {
+  const before = await turnSide(page);
+  const piece = page.locator('.piece-sprite--draggable').first();
+  await piece.waitFor({ timeout: 5000 });
+  let fromGrid = await piece.evaluate((el) => el.style.gridArea);
+  await piece.click();
+  await page.waitForSelector('.board-square__highlight', { timeout: 3000 });
+
+  // Multi-jumps are step-by-step: keep hopping until the turn flips.
+  for (let hop = 0; hop < 8; hop++) {
+    fromGrid = await clickOneHop(page, fromGrid);
+    const now = await turnSide(page);
+    if (now !== before) return fromGrid;
+  }
+  throw new Error(`Turn never flipped for piece chain starting at ${fromGrid}`);
 }
 
 async function main() {

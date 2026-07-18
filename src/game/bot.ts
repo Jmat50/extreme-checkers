@@ -1,7 +1,7 @@
 import { Bot } from 'boardgame.io/ai';
 import type { Ctx, Game, PlayerID, State } from 'boardgame.io';
 import { pickAiMove } from './game';
-import { getAllMoves, movesEqual } from './logic';
+import { getLegalMoves, movesEqual } from './logic';
 import { CheckersState, PLAYER_COLORS, PieceColor } from './types';
 
 export class CheckersBot extends Bot {
@@ -17,7 +17,8 @@ export class CheckersBot extends Bot {
     if (!move) {
       return Promise.resolve({ action: actions[0] });
     }
-    const allMoves = getAllMoves(G.board, color);
+    // Must mirror ai.enumerate ordering (getLegalMoves) for index mapping.
+    const allMoves = getLegalMoves(G.board, color, G.mustContinueFrom);
     const index = allMoves.findIndex((m) => movesEqual(m, move));
     return Promise.resolve({ action: actions[index] ?? actions[0] });
   }

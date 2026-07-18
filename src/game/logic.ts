@@ -97,12 +97,16 @@ function slideMoves(board: Cell[][], from: Position, piece: Piece): Move[] {
   return moves;
 }
 
+/**
+ * Single-step jumps only. Multi-jump chains are driven by `mustContinueFrom`
+ * in executeMove, so every intermediate landing square is a selectable target.
+ * (Returning only maximal chains hid the adjacent landing square and made
+ * jumps look impossible in the UI.)
+ */
 function captureMovesFrom(
   board: Cell[][],
   from: Position,
   piece: Piece,
-  origin: Position = from,
-  capturesSoFar: Position[] = [],
 ): Move[] {
   const moves: Move[] = [];
 
@@ -115,32 +119,29 @@ function captureMovesFrom(
 
     const midPiece = board[mid.row][mid.col];
     if (!midPiece || midPiece.color === piece.color) continue;
-    if (capturesSoFar.some((c) => c.row === mid.row && c.col === mid.col)) continue;
     if (board[land.row][land.col] !== null) continue;
 
-    const newCaptures = [...capturesSoFar, mid];
-    const tempBoard = cloneBoard(board);
-    tempBoard[from.row][from.col] = null;
-    newCaptures.forEach(({ row, col }) => {
-      tempBoard[row][col] = null;
-    });
-    placePiece(tempBoard, land, piece);
-
-    const landed = tempBoard[land.row][land.col];
-    if (!landed) {
-      moves.push({ from: origin, to: land, captures: newCaptures });
-      continue;
-    }
-
-    const further = captureMovesFrom(tempBoard, land, piece, origin, newCaptures);
-    if (further.length > 0) {
-      moves.push(...further);
-    } else {
-      moves.push({ from: origin, to: land, captures: newCaptures });
-    }
+    moves.push({ from, to: land, captures: [mid] });
   }
 
   return moves;
+}
+
+/**
+ * All moves the current player may legally submit right now.
+ * Mid multi-jump, only continuation jumps from `mustContinueFrom` are legal.
+ */
+export function getLegalMoves(
+  board: Cell[][],
+  color: PieceColor,
+  mustContinueFrom: Position | null,
+): Move[] {
+  if (mustContinueFrom) {
+    return getMovesForPiece(board, mustContinueFrom).filter(
+      (m) => m.captures?.length,
+    );
+  }
+  return getAllMoves(board, color);
 }
 
 export function getMovesForPiece(board: Cell[][], from: Position): Move[] {

@@ -48,7 +48,7 @@
   color: #fff;
   letter-spacing: 0.12em;
   z-index: 1;
-  animation: lobby-logo-shift 4s ease-in-out infinite alternate;
+  animation: lobby-logo-shift 8s ease-in-out infinite alternate;
 }
 
 .lobby-logo-glitch::before,
@@ -63,13 +63,13 @@
 }
 
 .lobby-logo-glitch::before {
-  animation: lobby-logo-glitch 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+  animation: lobby-logo-glitch 3.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
   color: #8b00ff;
   z-index: -1;
 }
 
 .lobby-logo-glitch::after {
-  animation: lobby-logo-glitch 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
+  animation: lobby-logo-glitch 3.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) reverse both infinite;
   color: #00e571;
   z-index: -2;
 }

@@ -4,6 +4,7 @@ import { CheckersState, Move, PLAYER_COLORS, PieceColor, Position } from './type
 import {
   executeMove,
   getAllMoves,
+  getLegalMoves,
   getMovesForPiece,
   getValidMovesForSelection,
   initialState,
@@ -131,21 +132,31 @@ export const CheckersGame: Game<CheckersState> = {
       return { ...G, selected: pos, validMoves: filtered };
     },
 
-    playMove({ G, ctx, playerID, events }, move: Move) {
+    playMove({ G, ctx, playerID, events }, move: Move, autoComplete = false) {
       if (G.winner) return INVALID_MOVE;
       if (!isPlayersTurn(ctx, playerID)) return INVALID_MOVE;
+      if (!move || !move.from || !move.to) return INVALID_MOVE;
 
       const color = currentColor(ctx);
       if (!color) return INVALID_MOVE;
 
-      const allMoves = getAllMoves(G.board, color);
-      const valid = allMoves.find((m) => movesEqual(m, move));
+      const legal = getLegalMoves(G.board, color, G.mustContinueFrom);
+      const valid = legal.find((m) => movesEqual(m, move));
       if (!valid) return INVALID_MOVE;
 
-      let next = applyAiMove(G, valid);
+      // AI submits with autoComplete: finish the whole jump chain in one move.
+      if (autoComplete) {
+        const next = applyAiMove(G, valid);
+        events.endTurn();
+        return { ...next, selected: null, validMoves: [], mustContinueFrom: null };
+      }
+
+      // Human path: one step at a time. If more jumps exist from the landing
+      // square, keep the turn open so the player continues the chain.
+      const next = executeMove(G, valid);
       if (next.mustContinueFrom) return next;
       events.endTurn();
-      return { ...next, selected: null, validMoves: [], mustContinueFrom: null };
+      return { ...next, selected: null, validMoves: [] };
     },
 
     clearSelection({ G }) {
@@ -171,9 +182,9 @@ export const CheckersGame: Game<CheckersState> = {
   ai: {
     enumerate: (G, ctx, playerID) => {
       const color = PLAYER_COLORS[playerID ?? ctx.currentPlayer] as PieceColor;
-      return getAllMoves(G.board, color).map((move) => ({
+      return getLegalMoves(G.board, color, G.mustContinueFrom).map((move) => ({
         move: 'playMove',
-        args: [move],
+        args: [move, true],
       }));
     },
   },
@@ -206,7 +217,7 @@ export function applyAiMove(G: CheckersState, move: Move): CheckersState {
 }
 
 export function pickAiMove(G: CheckersState, color: PieceColor): Move | null {
-  const moves = getAllMoves(G.board, color);
+  const moves = getLegalMoves(G.board, color, G.mustContinueFrom);
   if (moves.length === 0) return null;
 
   const scored = moves.map((move) => {

@@ -112,6 +112,10 @@ export function GameBoard({
         }
       }
 
+      // Mid multi-jump the chain piece is locked in; ignore other clicks so
+      // the forced continuation selection is never lost.
+      if (G.mustContinueFrom) return;
+
       const piece = G.board[row]?.[col];
       if (piece && piece.color === playerColor) {
         const filtered = getValidMovesForSelection(
