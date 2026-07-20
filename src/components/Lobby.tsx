@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import { isOnlineMultiplayerConfigured } from '../config/serverUrl';
+import {
+  AI_DIFFICULTY_DEFAULT,
+  AI_DIFFICULTY_MAX,
+  AI_DIFFICULTY_MIN,
+} from '../game/ai';
 import { OnlineLobby } from './OnlineLobby';
 import './Lobby.css';
 
@@ -12,6 +17,8 @@ export interface LobbyConfig {
   playerID?: string;
   credentials?: string;
   opponentName?: string;
+  /** 1 (random) … 10 (deep search). Only used for vs AI. */
+  aiDifficulty?: number;
   onLeave?: () => void;
 }
 
@@ -19,8 +26,17 @@ interface LobbyProps {
   onStart: (config: LobbyConfig) => void;
 }
 
+function difficultyLabel(level: number): string {
+  if (level <= 2) return 'Beginner';
+  if (level <= 4) return 'Easy';
+  if (level <= 6) return 'Medium';
+  if (level <= 8) return 'Hard';
+  return 'Brutal';
+}
+
 export function Lobby({ onStart }: LobbyProps) {
   const [playerName, setPlayerName] = useState('Name');
+  const [aiDifficulty, setAiDifficulty] = useState(AI_DIFFICULTY_DEFAULT);
   const [view, setView] = useState<'menu' | 'online'>('menu');
   const onlineAvailable = isOnlineMultiplayerConfigured();
 
@@ -72,10 +88,35 @@ export function Lobby({ onStart }: LobbyProps) {
         >
           Local 2-Player
         </button>
+        <label className="lobby-difficulty" htmlFor="ai-difficulty">
+          <span className="lobby-difficulty-text">
+            AI Difficulty: {aiDifficulty} — {difficultyLabel(aiDifficulty)}
+          </span>
+          <input
+            type="range"
+            id="ai-difficulty"
+            min={AI_DIFFICULTY_MIN}
+            max={AI_DIFFICULTY_MAX}
+            step={1}
+            value={aiDifficulty}
+            onChange={(e) => setAiDifficulty(Number(e.target.value))}
+            aria-valuemin={AI_DIFFICULTY_MIN}
+            aria-valuemax={AI_DIFFICULTY_MAX}
+            aria-valuenow={aiDifficulty}
+            aria-label="AI difficulty"
+          />
+        </label>
         <button
           type="button"
           className="button"
-          onClick={() => onStart({ mode: 'ai', playerName, playerID: '0' })}
+          onClick={() =>
+            onStart({
+              mode: 'ai',
+              playerName,
+              playerID: '0',
+              aiDifficulty,
+            })
+          }
         >
           Play vs AI
         </button>

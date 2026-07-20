@@ -241,6 +241,33 @@
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+.lobby-difficulty {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35em;
+  min-width: 14em;
+  padding: 0.35em 0.75em;
+  border: solid 2px rgba(255, 255, 255, 0.35);
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.75em;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.lobby-difficulty-text {
+  white-space: nowrap;
+}
+
+.lobby-difficulty input[type='range'] {
+  width: 100%;
+  margin: 0;
+  accent-color: #1cb495;
+  cursor: pointer;
+}
+
 .lobby-hint {
   margin: 1.25em 0 0;
   text-align: center;
@@ -414,6 +441,11 @@
   }
 
   .lobby-eventually input[type='text'] {
+    width: 100%;
+  }
+
+  .lobby-difficulty {
+    min-width: 0;
     width: 100%;
   }
 }

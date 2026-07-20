@@ -1,16 +1,16 @@
 import { Game } from 'boardgame.io';
-import { getGameConfig } from '../config/configStore';
-import { CheckersState, Move, PLAYER_COLORS, PieceColor, Position } from './types';
+import { CheckersState, Move, PLAYER_COLORS, PieceColor } from './types';
 import {
   executeMove,
   getAllMoves,
   getLegalMoves,
-  getMovesForPiece,
   getValidMovesForSelection,
   initialState,
-  isHazardSquare,
   movesEqual,
 } from './logic';
+import { applyAiMove } from './ai';
+
+export { applyAiMove, pickAiMove, AI_DIFFICULTY_DEFAULT } from './ai';
 
 /** boardgame.io rejects moves that return this sentinel (see boardgame.io/core). */
 const INVALID_MOVE = 'INVALID_MOVE';
@@ -189,51 +189,5 @@ export const CheckersGame: Game<CheckersState> = {
     },
   },
 };
-
-export function applyAiMove(G: CheckersState, move: Move): CheckersState {
-  let state: CheckersState = { ...G, selected: move.from, validMoves: [move] };
-  const allEliminations: Position[] = [];
-
-  state = executeMove(state, move);
-  allEliminations.push(...state.lastEliminations);
-
-  while (state.mustContinueFrom) {
-    const followUps = getMovesForPiece(state.board, state.mustContinueFrom).filter(
-      (m) => m.captures?.length,
-    );
-    if (followUps.length === 0) break;
-    state = executeMove(state, followUps[0]);
-    allEliminations.push(...state.lastEliminations);
-  }
-
-  return {
-    ...state,
-    selected: null,
-    validMoves: [],
-    mustContinueFrom: null,
-    lastEliminations: allEliminations,
-    eliminationFlash: allEliminations.length > 0 ? G.eliminationFlash + 1 : G.eliminationFlash,
-  };
-}
-
-export function pickAiMove(G: CheckersState, color: PieceColor): Move | null {
-  const moves = getLegalMoves(G.board, color, G.mustContinueFrom);
-  if (moves.length === 0) return null;
-
-  const scored = moves.map((move) => {
-    const ai = getGameConfig().ai;
-    let score = 0;
-    score += (move.captures?.length ?? 0) * ai.captureWeight;
-    const result = executeMove(G, move);
-    const piece = result.board[move.to.row][move.to.col];
-    if (!piece) score -= ai.selfDestructPenalty;
-    if (isHazardSquare(move.to.row, move.to.col)) score -= ai.hazardPenalty;
-    score += Math.random() * 0.5;
-    return { move, score };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-  return scored[0].move;
-}
 
 export { PLAYER_COLORS };
