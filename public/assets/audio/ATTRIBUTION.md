@@ -32,5 +32,6 @@ Tracks are selected from the lobby music knob (OFF + 1–6). Every track loops i
 
 ## Track 6
 
-- **Track:** Autumn Voyage
-- **File:** `track-6-autumn-voyage.mp3`
+- **Track:** Jellyfish Jam (Spongebob Music)
+- **Source:** https://www.youtube.com/watch?v=i-F615N2Ho0
+- **File:** `track-6-jellyfish-jam.mp3`

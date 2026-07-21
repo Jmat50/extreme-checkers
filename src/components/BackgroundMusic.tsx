@@ -17,7 +17,7 @@ const TRACKS: { id: MusicSelection; label: string; src: string | null }[] = [
   { id: 3, label: '3', src: assetUrl('assets/audio/track-3-scape-main.ogg') },
   { id: 4, label: '4', src: assetUrl('assets/audio/track-4-newbie-melody.mp3') },
   { id: 5, label: '5', src: assetUrl('assets/audio/track-5-sea-shanty-2.mp3') },
-  { id: 6, label: '6', src: assetUrl('assets/audio/track-6-autumn-voyage.mp3') },
+  { id: 6, label: '6', src: assetUrl('assets/audio/track-6-jellyfish-jam.mp3') },
 ];
 
 const SELECTION_ORDER: MusicSelection[] = [0, 1, 2, 3, 4, 5, 6];
