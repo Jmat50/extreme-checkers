@@ -257,6 +257,13 @@
   cursor: pointer;
 }
 
+#signup-form > .lobby-difficulty {
+  flex-basis: 100%;
+  align-self: center;
+  width: min(18em, 100%);
+  margin: 1.25em 0 0;
+}
+
 .lobby-difficulty-text {
   white-space: nowrap;
 }

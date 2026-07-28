@@ -88,24 +88,6 @@ export function Lobby({ onStart }: LobbyProps) {
         >
           Local 2-Player
         </button>
-        <label className="lobby-difficulty" htmlFor="ai-difficulty">
-          <span className="lobby-difficulty-text">
-            AI Difficulty: {aiDifficulty} — {difficultyLabel(aiDifficulty)}
-          </span>
-          <input
-            type="range"
-            id="ai-difficulty"
-            min={AI_DIFFICULTY_MIN}
-            max={AI_DIFFICULTY_MAX}
-            step={1}
-            value={aiDifficulty}
-            onChange={(e) => setAiDifficulty(Number(e.target.value))}
-            aria-valuemin={AI_DIFFICULTY_MIN}
-            aria-valuemax={AI_DIFFICULTY_MAX}
-            aria-valuenow={aiDifficulty}
-            aria-label="AI difficulty"
-          />
-        </label>
         <button
           type="button"
           className="button"
@@ -133,6 +115,24 @@ export function Lobby({ onStart }: LobbyProps) {
         >
           Online Multiplayer Lobby
         </button>
+        <label className="lobby-difficulty" htmlFor="ai-difficulty">
+          <span className="lobby-difficulty-text">
+            AI Difficulty: {aiDifficulty} — {difficultyLabel(aiDifficulty)}
+          </span>
+          <input
+            type="range"
+            id="ai-difficulty"
+            min={AI_DIFFICULTY_MIN}
+            max={AI_DIFFICULTY_MAX}
+            step={1}
+            value={aiDifficulty}
+            onChange={(e) => setAiDifficulty(Number(e.target.value))}
+            aria-valuemin={AI_DIFFICULTY_MIN}
+            aria-valuemax={AI_DIFFICULTY_MAX}
+            aria-valuenow={aiDifficulty}
+            aria-label="AI difficulty"
+          />
+        </label>
       </form>
 
       {!onlineAvailable && (
