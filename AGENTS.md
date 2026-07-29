@@ -40,7 +40,7 @@
 - **Drag:** pointer-drag piece to a valid square (`usePieceDrag`); ghost preview + drop highlight.
 - Move validation: `getValidMovesForSelection()` in `src/game/logic.ts` (forced captures, multi-jump).
 - Editor play mode uses the same board; `editMode` toggles bomb/start-position painting.
-- **Softlock trap:** while `usePieceDrag` has an open session, `Board2D` disables every square. Pointer listeners must finish on `window` (not only the piece); clear drag when the board becomes non-interactive (AI/online turn) or the tab blurs. See `src/game/AGENTS.md`.
+- **Softlock trap:** `Board2D` disables squares only during an *active* drag (past the move threshold). Tap/click must not set drag React state — a lost pointerup after pointerdown previously left every square disabled. See `src/game/AGENTS.md`.
 
 ## Key Files
 

@@ -102,6 +102,27 @@ export function GameBoard({
 
       const pos = { row, col };
 
+      // Mid multi-jump: always derive continuations from the board so a stale
+      // empty client validMoves list cannot softlock the chain.
+      if (G.mustContinueFrom) {
+        const chainMoves = getValidMovesForSelection(
+          G.board,
+          G.mustContinueFrom,
+          playerColor,
+          G.mustContinueFrom,
+        );
+        const chosen = chainMoves.find(
+          (m) => m.to.row === row && m.to.col === col,
+        );
+        if (chosen) {
+          commitMove(chosen);
+          return;
+        }
+        setSelected(G.mustContinueFrom);
+        setValidMoves(chainMoves);
+        return;
+      }
+
       if (selected) {
         const chosen = validMoves.find(
           (m) => m.to.row === row && m.to.col === col,
@@ -111,10 +132,6 @@ export function GameBoard({
           return;
         }
       }
-
-      // Mid multi-jump the chain piece is locked in; ignore other clicks so
-      // the forced continuation selection is never lost.
-      if (G.mustContinueFrom) return;
 
       const piece = G.board[row]?.[col];
       if (piece && piece.color === playerColor) {

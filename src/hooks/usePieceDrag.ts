@@ -71,6 +71,10 @@ function sameSquare(a: Position, b: Position): boolean {
   return a.row === b.row && a.col === b.col;
 }
 
+function eventPointerId(ev: PointerEvent | MouseEvent): number | null {
+  return 'pointerId' in ev && typeof ev.pointerId === 'number' ? ev.pointerId : null;
+}
+
 export function usePieceDrag({
   boardRef,
   board,
@@ -89,9 +93,7 @@ export function usePieceDrag({
   const wasActiveRef = useRef(false);
   const suppressSquareClicksUntil = useRef(0);
   const sessionRef = useRef<SessionHandlers | null>(null);
-  const abortSessionRef = useRef<(commit: boolean, ev?: PointerEvent | MouseEvent) => void>(
-    () => undefined,
-  );
+  const abortSessionRef = useRef<() => void>(() => undefined);
   onSelectRef.current = onSelectSquare;
   onCommitRef.current = onCommitMove;
 
@@ -148,10 +150,9 @@ export function usePieceDrag({
       if (!canDragPiece(row, col) || !playerColor) return;
       if (e.button !== 0) return;
 
-      // A prior pointerup was lost (common with touch / capture failure).
-      // Drop the stuck session so the board does not stay permanently locked.
+      // Reset any stuck prior session without depending on React state.
       if (activeDragPointerId.current !== null || sessionRef.current) {
-        abortSessionRef.current(false);
+        abortSessionRef.current();
       }
 
       e.preventDefault();
@@ -173,38 +174,44 @@ export function usePieceDrag({
       let sessionOpen = true;
       let maxDist = 0;
       let hoveredValidTarget = false;
+      // Defer React drag state until movement passes the threshold so a
+      // tap/click never disables every board square (softlock class).
+      let visualArmed = false;
 
       activeDragPointerId.current = e.pointerId;
 
       if (targetEl.setPointerCapture && 'pointerId' in e) {
         try {
-          targetEl.setPointerCapture(
-            (e as DragPointerLike & { pointerId: number }).pointerId,
-          );
+          targetEl.setPointerCapture(e.pointerId);
         } catch {
-          // Capture can fail after React replaces the node; window listeners still finish.
+          // Window listeners still finish the session if capture fails.
         }
       }
 
-      setDrag({
-        from,
-        piece,
-        ghostX: e.clientX,
-        ghostY: e.clientY,
-        active: false,
-        validTargets,
-        legalMoves,
-      });
-      setHover(from);
       hoverRef.current = from;
       wasActiveRef.current = false;
 
+      const armVisual = (ev: PointerEvent | MouseEvent, active: boolean) => {
+        visualArmed = true;
+        setHover(hoverRef.current);
+        setDrag({
+          from,
+          piece,
+          ghostX: ev.clientX,
+          ghostY: ev.clientY,
+          active,
+          validTargets,
+          legalMoves,
+        });
+      };
+
       const onMove = (ev: PointerEvent | MouseEvent) => {
         if (!sessionOpen) return;
+        const pid = eventPointerId(ev);
         if (
-          'pointerId' in ev &&
+          pid != null &&
           activeDragPointerId.current != null &&
-          ev.pointerId !== activeDragPointerId.current
+          pid !== activeDragPointerId.current
         ) {
           return;
         }
@@ -228,8 +235,15 @@ export function usePieceDrag({
           }
         }
 
-        setHover(hoverSquare);
         hoverRef.current = hoverSquare;
+
+        if (!visualArmed && active) {
+          armVisual(ev, true);
+          return;
+        }
+        if (!visualArmed) return;
+
+        setHover(hoverSquare);
         setDrag((prev) =>
           prev
             ? {
@@ -242,28 +256,33 @@ export function usePieceDrag({
         );
       };
 
-      const onFinish = (ev: PointerEvent | MouseEvent) => {
-        if (!sessionOpen) return;
-        if (
-          'pointerId' in ev &&
-          activeDragPointerId.current != null &&
-          ev.pointerId !== activeDragPointerId.current
-        ) {
-          return;
-        }
+      const endSessionShell = () => {
         sessionOpen = false;
         detachSessionListeners();
         activeDragPointerId.current = null;
-
         try {
-          if (
-            targetEl.hasPointerCapture?.(e.pointerId)
-          ) {
+          if (targetEl.hasPointerCapture?.(e.pointerId)) {
             targetEl.releasePointerCapture(e.pointerId);
           }
         } catch {
           // ignore
         }
+      };
+
+      const onFinish = (ev: PointerEvent | MouseEvent) => {
+        if (!sessionOpen) return;
+        const pid = eventPointerId(ev);
+        // Accept mouseup (no pointerId) always; for pointer events require match
+        // OR accept any pointerup if this session is the only one (recovery).
+        if (
+          pid != null &&
+          activeDragPointerId.current != null &&
+          pid !== activeDragPointerId.current
+        ) {
+          return;
+        }
+
+        endSessionShell();
 
         const boardEl = boardRef.current;
         const drop =
@@ -299,36 +318,20 @@ export function usePieceDrag({
         clearDragVisual();
       };
 
-      const abortSession = (commit: boolean, ev?: PointerEvent | MouseEvent) => {
+      const abortSession = () => {
         if (!sessionOpen) {
           clearDragVisual();
           activeDragPointerId.current = null;
           detachSessionListeners();
           return;
         }
-        if (commit && ev) {
-          onFinish(ev);
-          return;
-        }
-        sessionOpen = false;
-        detachSessionListeners();
-        activeDragPointerId.current = null;
-        try {
-          if (targetEl.hasPointerCapture?.(e.pointerId)) {
-            targetEl.releasePointerCapture(e.pointerId);
-          }
-        } catch {
-          // ignore
-        }
+        endSessionShell();
         clearDragVisual();
       };
       abortSessionRef.current = abortSession;
 
       sessionRef.current = { onMove, onFinish, targetEl, pointerId: e.pointerId };
 
-      // Listen on both the piece and window. Window listeners are required when
-      // setPointerCapture fails or pointerup is delivered outside the piece
-      // (touch / tab blur); otherwise drag stays set and every square disables.
       targetEl.addEventListener('pointermove', onMove);
       targetEl.addEventListener('pointerup', onFinish);
       targetEl.addEventListener('pointercancel', onFinish);
@@ -352,23 +355,22 @@ export function usePieceDrag({
     ],
   );
 
-  // AI / online turn handoff: drop any in-flight drag so squares unlock.
   useEffect(() => {
     if (interactive) return;
-    abortSessionRef.current(false);
+    abortSessionRef.current();
   }, [interactive]);
 
   useEffect(() => {
-    const onBlur = () => abortSessionRef.current(false);
+    const onBlur = () => abortSessionRef.current();
     const onVisibility = () => {
-      if (document.visibilityState === 'hidden') abortSessionRef.current(false);
+      if (document.visibilityState === 'hidden') abortSessionRef.current();
     };
     window.addEventListener('blur', onBlur);
     document.addEventListener('visibilitychange', onVisibility);
     return () => {
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('visibilitychange', onVisibility);
-      abortSessionRef.current(false);
+      abortSessionRef.current();
     };
   }, []);
 

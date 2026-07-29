@@ -1,7 +1,6 @@
 /**
- * Regression: a lost pointerup after piece pointerdown must not softlock
- * the board (all squares disabled). Window-level pointer listeners + stale
- * session reset should recover on the next interaction.
+ * Regression: pointerdown on a piece must NOT disable all squares until the
+ * drag threshold is crossed. Lost pointerups after a mere tap must not softlock.
  *
  * Run: node scripts/test-stuck-drag.mjs  (dev server on :5173)
  */
@@ -17,6 +16,7 @@ async function boardStats(page) {
       drag: document.querySelectorAll('.piece-sprite--draggable').length,
       disabled: squares.filter((s) => s.disabled).length,
       enabled: squares.filter((s) => !s.disabled).length,
+      draggingClass: document.querySelector('.board-2d')?.className ?? '',
     };
   });
 }
@@ -39,7 +39,7 @@ async function main() {
     throw new Error(`Expected interactive squares at start, got ${JSON.stringify(before)}`);
   }
 
-  // Lost pointerup (touch-style): previously left drag set and disabled all squares.
+  // Stuck pointerdown without up — must NOT softlock the board anymore.
   await page.evaluate(() => {
     const el = document.querySelector('.piece-sprite--draggable');
     if (!el) throw new Error('no piece');
@@ -56,10 +56,15 @@ async function main() {
       }),
     );
   });
+  await page.waitForTimeout(80);
+  const stuckDown = await boardStats(page);
+  if (stuckDown.enabled < 1) {
+    throw new Error(
+      `SOFTLOCK: pointerdown alone disabled the board: ${JSON.stringify(stuckDown)}`,
+    );
+  }
 
-  await page.waitForTimeout(50);
-  const mid = await boardStats(page);
-  // During an open session squares may disable; window pointerup must clear it.
+  // Window pointerup should finish the pending tap as a select (or no-op cleanly).
   await page.evaluate(() => {
     window.dispatchEvent(
       new PointerEvent('pointerup', {
@@ -73,58 +78,52 @@ async function main() {
       }),
     );
   });
-  await page.waitForTimeout(50);
+  await page.waitForTimeout(80);
   const afterUp = await boardStats(page);
   if (afterUp.enabled < 1) {
-    throw new Error(
-      `SOFTLOCK: window pointerup did not restore squares. mid=${JSON.stringify(mid)} after=${JSON.stringify(afterUp)}`,
-    );
+    throw new Error(`SOFTLOCK after pointerup: ${JSON.stringify(afterUp)}`);
   }
 
-  // Second lost pointerdown, then recover by starting a new piece interaction.
-  await page.evaluate(() => {
-    const el = document.querySelector('.piece-sprite--draggable');
-    if (!el) throw new Error('no piece');
-    const rect = el.getBoundingClientRect();
-    el.dispatchEvent(
-      new PointerEvent('pointerdown', {
-        bubbles: true,
-        cancelable: true,
-        clientX: rect.left + 5,
-        clientY: rect.top + 5,
-        button: 0,
-        pointerId: 100,
-        pointerType: 'touch',
-      }),
+  // Complete several full turns vs AI without softlock.
+  for (let i = 0; i < 6; i++) {
+    const turn = ((await page.locator('.turn-indicator').innerText()) || '').toLowerCase();
+    if (turn.includes('wins')) break;
+
+    const piece = page.locator('.piece-sprite--draggable').first();
+    await piece.waitFor({ timeout: 5000 });
+    const fromGrid = await piece.evaluate((el) => el.style.gridArea);
+    await piece.click();
+    await page.waitForSelector('.board-square__highlight', { timeout: 3000 });
+
+    const fromLabel = `Square ${fromGrid.replace(' / ', ', ')}`;
+    const destLabel = await page.evaluate((skip) => {
+      for (const btn of document.querySelectorAll('button.board-square')) {
+        const label = btn.getAttribute('aria-label');
+        if (!label || label === skip) continue;
+        if (btn.querySelector('.board-square__highlight')) return label;
+      }
+      return null;
+    }, fromLabel);
+    if (!destLabel) throw new Error(`No destination from ${fromLabel}`);
+    await page.locator(`button[aria-label="${destLabel}"]`).click({ force: true });
+
+    await page.waitForFunction(
+      () => {
+        const text = (document.querySelector('.turn-indicator')?.textContent || '').toLowerCase();
+        return text.includes('your turn') || text.includes("red's turn") || text.includes('wins');
+      },
+      { timeout: 15000 },
     );
-  });
-  await page.waitForTimeout(50);
-  await page.locator('.piece-sprite--draggable').nth(1).click({ force: true });
-  await page.waitForTimeout(100);
-  const afterRecover = await boardStats(page);
-  if (afterRecover.enabled < 1) {
-    throw new Error(
-      `SOFTLOCK: next piece interaction did not recover. ${JSON.stringify(afterRecover)}`,
-    );
+
+    const mid = await boardStats(page);
+    const t = mid.turn.toLowerCase();
+    if (!t.includes('wins') && mid.enabled < 1 && mid.drag < 1) {
+      throw new Error(`SOFTLOCK after turn ${i + 1}: ${JSON.stringify(mid)}`);
+    }
+    if (t.includes('wins')) break;
   }
 
-  // Still able to complete a real move after the glitch.
-  const piece = page.locator('.piece-sprite--draggable').first();
-  await piece.click();
-  await page.waitForSelector('.board-square__highlight', { timeout: 3000 });
-  const target = page.locator('button.board-square').filter({
-    has: page.locator('.board-square__highlight'),
-  }).first();
-  await target.click();
-  await page.waitForFunction(
-    () => {
-      const t = (document.querySelector('.turn-indicator')?.textContent || '').toLowerCase();
-      return t.includes('black') || t.includes('wins') || t.includes('your turn');
-    },
-    { timeout: 10000 },
-  );
-
-  console.log('PASS: stuck-drag softlock recovered; move still playable');
+  console.log('PASS: pointerdown no longer softlocks; vs-AI turns stay playable');
   await browser.close();
 }
 

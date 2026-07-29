@@ -74,7 +74,7 @@ export function Board2D({
   const dragFrom = drag?.from ?? null;
 
   const handleSquareSelect = (row: number, col: number) => {
-    if (drag || shouldSuppressSquareClick()) return;
+    if (drag?.active || shouldSuppressSquareClick()) return;
     onSelectSquare(row, col);
   };
 
@@ -95,7 +95,9 @@ export function Board2D({
   function isSquareInteractive(row: number, col: number): boolean {
     if (!boardInteractive) return false;
     if (isEditing) return true;
-    if (drag) return false;
+    // Only a real in-progress drag (past threshold) locks squares. Pending
+    // pointerdowns must not disable the board — that was a softlock class.
+    if (drag?.active) return false;
 
     const key = `${row},${col}`;
     if (validTargets.has(key)) return true;

@@ -44,7 +44,7 @@ Capture generation is **single-step only**. Multi-jumps are hop-by-hop via `must
 
 ## Softlock checklist (if “I can’t move”)
 
-1. **Stuck drag** (`usePieceDrag`): `drag != null` makes `Board2D` disable *all* squares while pieces may still look `--draggable`. Pointerup must be heard on `window`, not only the piece; abort on `interactive === false`, blur, and visibility hidden. Next pointerdown must reset a stale session.
+1. **Stuck drag** (`usePieceDrag`): only an *active* drag (past threshold) may disable squares. Pointerdown alone must not `setDrag`. Finish on `window` pointerup/cancel; abort on `interactive === false`, blur, visibility hidden; next pointerdown resets a stale session.
 2. **Burned turn**: selection no-ops ending the turn (`maxMoves`) — covered by `scripts/test-turn-burn.ts`.
 3. **Mid-chain with no targets**: `mustContinueFrom` set but empty continuations — should not happen if `executeMove` and `getLegalMoves` agree; `scripts/test-jump-rules.ts`.
 4. **AI never replies**: Local bot hang / invalid action — `scripts/test-ai-jumps.mjs`, `scripts/test-stuck-drag.mjs`.
