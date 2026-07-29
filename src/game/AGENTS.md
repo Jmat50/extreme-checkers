@@ -2,12 +2,20 @@
 
 Guidance for the shared checkers engine (`src/game/`) and how the React client must talk to it. Root `AGENTS.md` covers repo layout; this file is the softlock / regression checklist.
 
+## Modes (`client.tsx` / `App.tsx`)
+
+- **local** — no `multiplayer`; both seats on one client (`playerID` undefined).
+- **ai** — `Local({ bots: { '1': createCheckersBot(...) } })`; human is always seat `'0'`.
+- **online** — `SocketIO` + credentials; never drive online with two-step master `selectSquare` (races). Live path is client selection → atomic `playMove`.
+
 ## Turn model (boardgame.io)
 
 - **Do not use `maxMoves` / `minMoves` for selection.** Select / reselect / deselect are UI-only and must not burn the turn. Turns end only via `events.endTurn()` after a completed board move.
 - **Human plays** commit with `playMove(move)` (one hop). If `mustContinueFrom` is set, the same player keeps the turn for the next forced jump.
 - **AI / bots** commit with `playMove(move, true)` so `applyAiMove` auto-completes the full jump chain, then `endTurn()`.
 - `ai.enumerate` must emit `[move, true]` and use `getLegalMoves(..., G.mustContinueFrom)` — the bot indexes into that same list (`bot.ts`).
+- Default rules use omnidirectional pieces (`allPiecesStartAsKings`); do not “fix” men to forward-only without an explicit design change.
+- Landing on a **hazard** removes the piece (`placePiece`); the chain ends — no `mustContinueFrom` from an empty square.
 
 ## Legal moves vs UI selection
 

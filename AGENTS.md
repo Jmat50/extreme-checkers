@@ -44,6 +44,7 @@
 
 ## Key Files
 
+- `src/game/AGENTS.md` — turn/AI/softlock constraints (read before changing moves or drag)
 - `src/game/game.ts` — boardgame.io game definition and moves
 - `src/game/logic.ts` — board state, move generation, hazards
 - `src/config/gameConfig.ts` — tunable rules/scene defaults
