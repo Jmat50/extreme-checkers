@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { isOnlineMultiplayerConfigured } from '../config/serverUrl';
 import {
   AI_DIFFICULTY_DEFAULT,
@@ -6,6 +6,7 @@ import {
   AI_DIFFICULTY_MIN,
 } from '../game/ai';
 import { OnlineLobby } from './OnlineLobby';
+import { assetUrl } from '../utils/assets';
 import './Lobby.css';
 
 export type GameMode = 'local' | 'online' | 'ai';
@@ -38,7 +39,35 @@ export function Lobby({ onStart }: LobbyProps) {
   const [playerName, setPlayerName] = useState('Name');
   const [aiDifficulty, setAiDifficulty] = useState(AI_DIFFICULTY_DEFAULT);
   const [view, setView] = useState<'menu' | 'online'>('menu');
+  const [aiDialogOpen, setAiDialogOpen] = useState(false);
   const onlineAvailable = isOnlineMultiplayerConfigured();
+  const dialogTitleId = useId();
+  const difficultyInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!aiDialogOpen) return;
+
+    difficultyInputRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setAiDialogOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [aiDialogOpen]);
+
+  const startAiGame = () => {
+    setAiDialogOpen(false);
+    onStart({
+      mode: 'ai',
+      playerName,
+      playerID: '0',
+      aiDifficulty,
+    });
+  };
 
   if (view === 'online') {
     return (
@@ -56,8 +85,15 @@ export function Lobby({ onStart }: LobbyProps) {
   return (
     <div className="lobby-eventually">
       <header id="header">
-        <h1 className="lobby-logo-glitch" data-glitch="Extreme Checkers">
-          Extreme Checkers
+        <h1 className="lobby-logo">
+          <img
+            className="lobby-logo-img"
+            src={assetUrl('icons/extreme-checkers-logo.png')}
+            alt="Extreme Checkers"
+            width={1024}
+            height={682}
+            decoding="async"
+          />
         </h1>
         <p>
           2D overhead checkers with bombs, captures, and online multiplayer.
@@ -91,14 +127,7 @@ export function Lobby({ onStart }: LobbyProps) {
         <button
           type="button"
           className="button"
-          onClick={() =>
-            onStart({
-              mode: 'ai',
-              playerName,
-              playerID: '0',
-              aiDifficulty,
-            })
-          }
+          onClick={() => setAiDialogOpen(true)}
         >
           Play vs AI
         </button>
@@ -115,30 +144,62 @@ export function Lobby({ onStart }: LobbyProps) {
         >
           Online Multiplayer Lobby
         </button>
-        <label className="lobby-difficulty" htmlFor="ai-difficulty">
-          <span className="lobby-difficulty-text">
-            AI Difficulty: {aiDifficulty} — {difficultyLabel(aiDifficulty)}
-          </span>
-          <input
-            type="range"
-            id="ai-difficulty"
-            min={AI_DIFFICULTY_MIN}
-            max={AI_DIFFICULTY_MAX}
-            step={1}
-            value={aiDifficulty}
-            onChange={(e) => setAiDifficulty(Number(e.target.value))}
-            aria-valuemin={AI_DIFFICULTY_MIN}
-            aria-valuemax={AI_DIFFICULTY_MAX}
-            aria-valuenow={aiDifficulty}
-            aria-label="AI difficulty"
-          />
-        </label>
       </form>
 
       {!onlineAvailable && (
         <p className="lobby-hint">
           Online play is not configured for this build. Local and vs AI still work.
         </p>
+      )}
+
+      {aiDialogOpen && (
+        <div
+          className="lobby-ai-dialog-backdrop"
+          onClick={() => setAiDialogOpen(false)}
+        >
+          <div
+            className="lobby-ai-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={dialogTitleId}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id={dialogTitleId} className="lobby-ai-dialog-title">
+              Play vs AI
+            </h2>
+            <label className="lobby-difficulty" htmlFor="ai-difficulty">
+              <span className="lobby-difficulty-text">
+                AI Difficulty: {aiDifficulty} — {difficultyLabel(aiDifficulty)}
+              </span>
+              <input
+                ref={difficultyInputRef}
+                type="range"
+                id="ai-difficulty"
+                min={AI_DIFFICULTY_MIN}
+                max={AI_DIFFICULTY_MAX}
+                step={1}
+                value={aiDifficulty}
+                onChange={(e) => setAiDifficulty(Number(e.target.value))}
+                aria-valuemin={AI_DIFFICULTY_MIN}
+                aria-valuemax={AI_DIFFICULTY_MAX}
+                aria-valuenow={aiDifficulty}
+                aria-label="AI difficulty"
+              />
+            </label>
+            <div className="lobby-ai-dialog-actions">
+              <button
+                type="button"
+                className="button button--secondary"
+                onClick={() => setAiDialogOpen(false)}
+              >
+                Cancel
+              </button>
+              <button type="button" className="button" onClick={startAiGame}>
+                Start
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
