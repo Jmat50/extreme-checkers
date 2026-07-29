@@ -41,8 +41,9 @@ async function main() {
   page.on('pageerror', (e) => errors.push(String(e)));
 
   await page.goto(URL, { waitUntil: 'networkidle' });
-  await page.getByRole('button', { name: /vs ai/i }).click();
-  await page.waitForSelector('.piece-sprite--draggable');
+  await page.getByRole('button', { name: /play vs ai/i }).click();
+  await page.getByRole('dialog').getByRole('button', { name: /^start$/i }).click();
+  await page.waitForSelector('.piece-sprite--draggable', { timeout: 15000 });
 
   let movesPlayed = 0;
   for (let i = 0; i < 8; i++) {
@@ -63,17 +64,28 @@ async function main() {
     }
     movesPlayed++;
 
-    // Bot (black) must respond: red's turn again (or game over) within 10s
+    // Bot (black) must respond: red's turn again (or game over)
     await page.waitForFunction(
       () => {
         const el = document.querySelector('.turn-indicator');
         const text = (el?.textContent || '').toLowerCase();
         return text.includes("red's turn") || text.includes('your turn') || text.includes('wins');
       },
-      { timeout: 10000 },
+      { timeout: 15000 },
     );
     const after = await turnText(page);
     if (after.includes('wins')) break;
+
+    const soft = await page.evaluate(() => {
+      const enabled = [...document.querySelectorAll('button.board-square')].filter(
+        (s) => !s.disabled,
+      ).length;
+      const drag = document.querySelectorAll('.piece-sprite--draggable').length;
+      return { enabled, drag };
+    });
+    if (soft.drag === 0 && soft.enabled === 0) {
+      throw new Error(`SOFTLOCK after AI reply on move ${movesPlayed}: ${JSON.stringify(soft)}`);
+    }
   }
 
   if (movesPlayed < 5) {

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Cell, Move, Piece, PieceColor, Position } from '../game/types';
 import { getValidMovesForSelection } from '../game/logic';
 
@@ -60,6 +60,13 @@ type DragPointerLike = {
   stopPropagation: () => void;
 };
 
+type SessionHandlers = {
+  onMove: (ev: PointerEvent | MouseEvent) => void;
+  onFinish: (ev: PointerEvent | MouseEvent) => void;
+  targetEl: HTMLElement;
+  pointerId: number;
+};
+
 function sameSquare(a: Position, b: Position): boolean {
   return a.row === b.row && a.col === b.col;
 }
@@ -81,11 +88,40 @@ export function usePieceDrag({
   const hoverRef = useRef<Position | null>(null);
   const wasActiveRef = useRef(false);
   const suppressSquareClicksUntil = useRef(0);
+  const sessionRef = useRef<SessionHandlers | null>(null);
+  const abortSessionRef = useRef<(commit: boolean, ev?: PointerEvent | MouseEvent) => void>(
+    () => undefined,
+  );
   onSelectRef.current = onSelectSquare;
   onCommitRef.current = onCommitMove;
 
   const shouldSuppressSquareClick = useCallback(() => {
     return Date.now() < suppressSquareClicksUntil.current;
+  }, []);
+
+  const clearDragVisual = useCallback(() => {
+    setDrag(null);
+    setHover(null);
+    hoverRef.current = null;
+    wasActiveRef.current = false;
+  }, []);
+
+  const detachSessionListeners = useCallback(() => {
+    const session = sessionRef.current;
+    if (!session) return;
+    const { targetEl, onMove, onFinish } = session;
+    targetEl.removeEventListener('pointermove', onMove);
+    targetEl.removeEventListener('pointerup', onFinish);
+    targetEl.removeEventListener('pointercancel', onFinish);
+    targetEl.removeEventListener('lostpointercapture', onFinish);
+    targetEl.removeEventListener('mousemove', onMove);
+    targetEl.removeEventListener('mouseup', onFinish);
+    window.removeEventListener('pointermove', onMove);
+    window.removeEventListener('pointerup', onFinish);
+    window.removeEventListener('pointercancel', onFinish);
+    window.removeEventListener('mousemove', onMove);
+    window.removeEventListener('mouseup', onFinish);
+    sessionRef.current = null;
   }, []);
 
   const canDragPiece = useCallback(
@@ -111,7 +147,12 @@ export function usePieceDrag({
     (row: number, col: number, e: DragPointerLike) => {
       if (!canDragPiece(row, col) || !playerColor) return;
       if (e.button !== 0) return;
-      if (activeDragPointerId.current !== null) return;
+
+      // A prior pointerup was lost (common with touch / capture failure).
+      // Drop the stuck session so the board does not stay permanently locked.
+      if (activeDragPointerId.current !== null || sessionRef.current) {
+        abortSessionRef.current(false);
+      }
 
       e.preventDefault();
       e.stopPropagation();
@@ -137,13 +178,15 @@ export function usePieceDrag({
 
       if (targetEl.setPointerCapture && 'pointerId' in e) {
         try {
-          targetEl.setPointerCapture((e as DragPointerLike & { pointerId: number }).pointerId);
+          targetEl.setPointerCapture(
+            (e as DragPointerLike & { pointerId: number }).pointerId,
+          );
         } catch {
-          // ignore
+          // Capture can fail after React replaces the node; window listeners still finish.
         }
       }
 
-      const visual: DragVisual = {
+      setDrag({
         from,
         piece,
         ghostX: e.clientX,
@@ -151,14 +194,20 @@ export function usePieceDrag({
         active: false,
         validTargets,
         legalMoves,
-      };
-      setDrag(visual);
+      });
       setHover(from);
       hoverRef.current = from;
       wasActiveRef.current = false;
 
       const onMove = (ev: PointerEvent | MouseEvent) => {
         if (!sessionOpen) return;
+        if (
+          'pointerId' in ev &&
+          activeDragPointerId.current != null &&
+          ev.pointerId !== activeDragPointerId.current
+        ) {
+          return;
+        }
 
         const dx = ev.clientX - origin.x;
         const dy = ev.clientY - origin.y;
@@ -174,10 +223,7 @@ export function usePieceDrag({
 
         if (hoverSquare) {
           const hoverKey = `${hoverSquare.row},${hoverSquare.col}`;
-          if (
-            validTargets.has(hoverKey) &&
-            !sameSquare(hoverSquare, from)
-          ) {
+          if (validTargets.has(hoverKey) && !sameSquare(hoverSquare, from)) {
             hoveredValidTarget = true;
           }
         }
@@ -198,16 +244,26 @@ export function usePieceDrag({
 
       const onFinish = (ev: PointerEvent | MouseEvent) => {
         if (!sessionOpen) return;
+        if (
+          'pointerId' in ev &&
+          activeDragPointerId.current != null &&
+          ev.pointerId !== activeDragPointerId.current
+        ) {
+          return;
+        }
         sessionOpen = false;
-
-        targetEl.removeEventListener('pointermove', onMove);
-        targetEl.removeEventListener('pointerup', onFinish);
-        targetEl.removeEventListener('pointercancel', onFinish);
-        targetEl.removeEventListener('mousemove', onMove);
-        targetEl.removeEventListener('mouseup', onFinish);
-        window.removeEventListener('mousemove', onMove);
-        window.removeEventListener('mouseup', onFinish);
+        detachSessionListeners();
         activeDragPointerId.current = null;
+
+        try {
+          if (
+            targetEl.hasPointerCapture?.(e.pointerId)
+          ) {
+            targetEl.releasePointerCapture(e.pointerId);
+          }
+        } catch {
+          // ignore
+        }
 
         const boardEl = boardRef.current;
         const drop =
@@ -240,22 +296,81 @@ export function usePieceDrag({
           onSelectRef.current(from.row, from.col);
         }
 
-        setDrag(null);
-        setHover(null);
-        hoverRef.current = null;
-        wasActiveRef.current = false;
+        clearDragVisual();
       };
 
+      const abortSession = (commit: boolean, ev?: PointerEvent | MouseEvent) => {
+        if (!sessionOpen) {
+          clearDragVisual();
+          activeDragPointerId.current = null;
+          detachSessionListeners();
+          return;
+        }
+        if (commit && ev) {
+          onFinish(ev);
+          return;
+        }
+        sessionOpen = false;
+        detachSessionListeners();
+        activeDragPointerId.current = null;
+        try {
+          if (targetEl.hasPointerCapture?.(e.pointerId)) {
+            targetEl.releasePointerCapture(e.pointerId);
+          }
+        } catch {
+          // ignore
+        }
+        clearDragVisual();
+      };
+      abortSessionRef.current = abortSession;
+
+      sessionRef.current = { onMove, onFinish, targetEl, pointerId: e.pointerId };
+
+      // Listen on both the piece and window. Window listeners are required when
+      // setPointerCapture fails or pointerup is delivered outside the piece
+      // (touch / tab blur); otherwise drag stays set and every square disables.
       targetEl.addEventListener('pointermove', onMove);
       targetEl.addEventListener('pointerup', onFinish);
       targetEl.addEventListener('pointercancel', onFinish);
+      targetEl.addEventListener('lostpointercapture', onFinish);
       targetEl.addEventListener('mousemove', onMove);
       targetEl.addEventListener('mouseup', onFinish);
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onFinish);
+      window.addEventListener('pointercancel', onFinish);
       window.addEventListener('mousemove', onMove);
       window.addEventListener('mouseup', onFinish);
     },
-    [board, boardRef, canDragPiece, mustContinueFrom, playerColor],
+    [
+      board,
+      boardRef,
+      canDragPiece,
+      clearDragVisual,
+      detachSessionListeners,
+      mustContinueFrom,
+      playerColor,
+    ],
   );
+
+  // AI / online turn handoff: drop any in-flight drag so squares unlock.
+  useEffect(() => {
+    if (interactive) return;
+    abortSessionRef.current(false);
+  }, [interactive]);
+
+  useEffect(() => {
+    const onBlur = () => abortSessionRef.current(false);
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') abortSessionRef.current(false);
+    };
+    window.addEventListener('blur', onBlur);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      window.removeEventListener('blur', onBlur);
+      document.removeEventListener('visibilitychange', onVisibility);
+      abortSessionRef.current(false);
+    };
+  }, []);
 
   const handlePiecePointerDown = useCallback(
     (row: number, col: number, e: React.PointerEvent<HTMLDivElement>) => {
