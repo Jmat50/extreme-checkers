@@ -148,14 +148,12 @@ export function getMovesForPiece(board: Cell[][], from: Position): Move[] {
   const piece = getPieceAt(board, from);
   if (!piece) return [];
 
-  const captures = captureMovesFrom(board, from, piece);
-  if (captures.length > 0) {
-    return captures.filter((m) => m.captures && m.captures.length > 0);
-  }
-  return slideMoves(board, from, piece);
+  // Captures are optional (except mid multi-jump, handled by callers):
+  // offer both jumps and slides from this square.
+  return [...captureMovesFrom(board, from, piece), ...slideMoves(board, from, piece)];
 }
 
-/** Valid moves when selecting a piece (respects forced capture and multi-jump). */
+/** Valid moves when selecting a piece (optional captures; forced mid multi-jump). */
 export function getValidMovesForSelection(
   board: Cell[][],
   pos: Position,
@@ -172,37 +170,17 @@ export function getValidMovesForSelection(
   const piece = getPieceAt(board, pos);
   if (!piece || piece.color !== color) return [];
 
-  const validMoves = getMovesForPiece(board, pos);
-  const allMoves = getAllMoves(board, color);
-  const mustCapture = allMoves.some((m) => m.captures?.length);
-  return mustCapture
-    ? validMoves.filter((m) => m.captures?.length)
-    : validMoves;
+  return getMovesForPiece(board, pos);
 }
 
 export function getAllMoves(board: Cell[][], color: PieceColor): Move[] {
   const moves: Move[] = [];
-  let hasCapture = false;
 
   for (let row = 0; row < BOARD_SIZE; row++) {
     for (let col = 0; col < BOARD_SIZE; col++) {
       const piece = board[row][col];
       if (!piece || piece.color !== color) continue;
-      const pieceCaptures = captureMovesFrom(board, { row, col }, piece);
-      if (pieceCaptures.length > 0) {
-        hasCapture = true;
-        moves.push(...pieceCaptures);
-      }
-    }
-  }
-
-  if (hasCapture) return moves;
-
-  for (let row = 0; row < BOARD_SIZE; row++) {
-    for (let col = 0; col < BOARD_SIZE; col++) {
-      const piece = board[row][col];
-      if (!piece || piece.color !== color) continue;
-      moves.push(...slideMoves(board, { row, col }, piece));
+      moves.push(...getMovesForPiece(board, { row, col }));
     }
   }
 

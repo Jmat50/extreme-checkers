@@ -15,8 +15,8 @@ function emptyBoard(): Cell[][] {
   );
 }
 
-/** Forced-capture: red (3,2) jumps black (4,3)→(5,4). Red (2,1) has no legal move. */
-function forcedCaptureSetup(): CheckersState {
+/** Capture available: red (3,2) can jump black (4,3)→(5,4); red (2,1) may also slide. */
+function captureAvailableSetup(): CheckersState {
   const board = emptyBoard();
   board[3][2] = { color: 'red', king: true };
   board[2][1] = { color: 'red', king: true };
@@ -34,7 +34,7 @@ function forcedCaptureSetup(): CheckersState {
   };
 }
 
-function makeClient(setup: () => CheckersState = forcedCaptureSetup) {
+function makeClient(setup: () => CheckersState = captureAvailableSetup) {
   return Client({
     game: { ...CheckersGame, setup },
   });
@@ -52,7 +52,7 @@ function assert(cond: boolean, msg: string) {
 
 type Moves = { selectSquare: (row: number, col: number) => void };
 
-// --- A: dead select then capturer select must not burn the turn ---
+// --- A: selecting another piece / capturer must not burn the turn ---
 {
   const client = makeClient();
   client.start();
@@ -62,10 +62,13 @@ type Moves = { selectSquare: (row: number, col: number) => void };
 
   moves.selectSquare(2, 1);
   let state = client.getState()!;
-  assert(state.G.selected == null, 'A: non-capturer does not select');
+  assert(
+    state.G.selected?.row === 2 && state.G.selected?.col === 1,
+    'A: non-capturer may select (captures optional)',
+  );
   assert(
     state.ctx.currentPlayer === '0',
-    `A: still red after dead select (got ${state.ctx.currentPlayer})`,
+    `A: still red after select (got ${state.ctx.currentPlayer})`,
   );
 
   moves.selectSquare(3, 2);

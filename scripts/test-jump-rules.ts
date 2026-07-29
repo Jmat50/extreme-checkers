@@ -1,6 +1,6 @@
 /**
  * Rules regression: jumps must offer every intermediate landing square
- * (step-by-step multi-jump via mustContinueFrom), forced capture, hazards.
+ * (step-by-step multi-jump via mustContinueFrom), optional captures, hazards.
  * Run: npx tsx scripts/test-jump-rules.ts
  */
 import { Client } from '../node_modules/boardgame.io/dist/esm/client.js';
@@ -140,7 +140,7 @@ type PlayMove = { playMove: (m: Move) => void };
   assert(result.mustContinueFrom == null, 'S3: no dangling mustContinueFrom');
 }
 
-// --- Scenario 4: forced capture blocks other pieces from sliding ---
+// --- Scenario 4: captures optional — non-jumpers still get slides ---
 {
   const board = emptyBoard();
   board[4][5] = { color: 'red', king: true };
@@ -148,16 +148,25 @@ type PlayMove = { playMove: (m: Move) => void };
   board[1][2] = { color: 'red', king: true };
 
   const farMoves = getValidMovesForSelection(board, { row: 1, col: 2 }, 'red', null);
-  assert(farMoves.length === 0, 'S4: non-capturing red frozen by forced capture');
+  assert(farMoves.length > 0, 'S4: non-capturing red may still slide');
+  assert(
+    farMoves.every((m) => !m.captures?.length),
+    'S4: far red only has slides (no adjacent enemy)',
+  );
 
   const jumper = getValidMovesForSelection(board, { row: 4, col: 5 }, 'red', null);
   assert(
-    jumper.length > 0 && jumper.every((m) => m.captures?.length),
-    'S4: capturing red offers only jumps',
+    jumper.some((m) => m.captures?.length),
+    'S4: capturing red still offers jumps',
+  );
+  assert(
+    jumper.some((m) => !m.captures?.length),
+    'S4: capturing red may also slide (captures optional)',
   );
 
   const all = getAllMoves(board, 'red');
-  assert(all.every((m) => m.captures?.length), 'S4: getAllMoves returns only captures');
+  assert(all.some((m) => m.captures?.length), 'S4: getAllMoves includes captures');
+  assert(all.some((m) => !m.captures?.length), 'S4: getAllMoves includes slides');
 }
 
 // --- Scenario 5: jump landing on hazard allowed; chain ends there ---
@@ -203,8 +212,8 @@ type PlayMove = { playMove: (m: Move) => void };
 
   (client.moves as { playMove: (m?: unknown) => void }).playMove(undefined);
   (client.moves as { playMove: (m?: unknown) => void }).playMove({ from: { row: 4, col: 5 } });
-  // Slide while a capture is forced -> illegal
-  (client.moves as PlayMove).playMove({ from: { row: 4, col: 5 }, to: { row: 3, col: 4 } });
+  // Completely off-board / nonsense destination stays illegal
+  (client.moves as PlayMove).playMove({ from: { row: 4, col: 5 }, to: { row: 0, col: 0 } });
 
   const st = client.getState()!;
   assert(st.G.board[4][5]?.color === 'red', 'S6: board unchanged after junk moves');

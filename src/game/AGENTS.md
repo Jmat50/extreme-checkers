@@ -22,7 +22,7 @@ Guidance for the shared checkers engine (`src/game/`) and how the React client m
 | Helper | Use |
 |--------|-----|
 | `getLegalMoves(board, color, mustContinueFrom)` | What may be submitted *right now* (respects mid-chain) |
-| `getAllMoves(board, color)` | Full forced-capture set for a fresh turn / `endIf` |
+| `getAllMoves(board, color)` | All slides + captures for a fresh turn / `endIf` (captures are optional) |
 | `getValidMovesForSelection(...)` | Click/drag highlights for one piece |
 | `executeMove` | One hop; may set `mustContinueFrom` |
 | `applyAiMove` | Root hop + finish chain for search / bot autoComplete |

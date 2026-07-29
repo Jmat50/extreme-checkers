@@ -13,7 +13,7 @@
 ## How to play
 
 - **Drag** your piece to a green highlighted square, or **click** a piece then click a destination.
-- Valid moves are highlighted in green; forced captures apply when available.
+- Valid moves are highlighted in green; jumping is optional (you may slide instead of capturing). Once a multi-jump is started, you must finish the chain.
 - Bomb squares eliminate any piece that lands on them.
 
 ## Deployment (GitHub Pages + Render)
