@@ -53,12 +53,6 @@
   filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
 }
 
-#header p {
-  font-size: 1.35em;
-  line-height: 1.65em;
-  margin: 0;
-}
-
 #signup-form,
 .lobby-join-form {
   display: flex;
@@ -375,10 +369,6 @@
 
   .lobby-logo-img {
     width: min(20rem, 88vw);
-  }
-
-  #header p {
-    font-size: 1em;
   }
 
   #signup-form,

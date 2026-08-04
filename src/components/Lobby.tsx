@@ -95,11 +95,6 @@ export function Lobby({ onStart }: LobbyProps) {
             decoding="async"
           />
         </h1>
-        <p>
-          2D overhead checkers with bombs, captures, and online multiplayer.
-          <br />
-          Red moves first — pass the device when the turn changes.
-        </p>
       </header>
 
       <form
