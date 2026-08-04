@@ -138,6 +138,14 @@
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+.lobby-rules-button {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 90;
+  margin: 0 !important;
+}
+
 .lobby-difficulty {
   display: flex;
   flex-direction: column;
@@ -202,6 +210,59 @@
   justify-content: flex-end;
   gap: 0.65em;
   margin-top: 1.1em;
+}
+
+.lobby-rules-dialog {
+  width: min(36em, 100%);
+  max-height: min(85vh, 40em);
+  display: flex;
+  flex-direction: column;
+}
+
+.lobby-rules-body {
+  overflow-y: auto;
+  padding-right: 0.35em;
+  margin: 0 0 0.25em;
+  text-align: left;
+  font-size: 0.88em;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.lobby-rules-body section + section {
+  margin-top: 1.1em;
+}
+
+.lobby-rules-body h3 {
+  margin: 0 0 0.4em;
+  font-size: 0.95em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #1cb495;
+  text-transform: uppercase;
+}
+
+.lobby-rules-body p,
+.lobby-rules-body ul {
+  margin: 0 0 0.55em;
+}
+
+.lobby-rules-body ul {
+  padding-left: 1.2em;
+}
+
+.lobby-rules-body li + li {
+  margin-top: 0.35em;
+}
+
+.lobby-rules-body strong {
+  color: #fff;
+  font-weight: 700;
+}
+
+.lobby-rules-body em {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.95);
 }
 
 @keyframes lobby-ai-dialog-in {

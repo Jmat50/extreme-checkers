@@ -40,9 +40,12 @@ export function Lobby({ onStart }: LobbyProps) {
   const [aiDifficulty, setAiDifficulty] = useState(AI_DIFFICULTY_DEFAULT);
   const [view, setView] = useState<'menu' | 'online'>('menu');
   const [aiDialogOpen, setAiDialogOpen] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const onlineAvailable = isOnlineMultiplayerConfigured();
-  const dialogTitleId = useId();
+  const aiDialogTitleId = useId();
+  const rulesDialogTitleId = useId();
   const difficultyInputRef = useRef<HTMLInputElement>(null);
+  const rulesCloseRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!aiDialogOpen) return;
@@ -58,6 +61,21 @@ export function Lobby({ onStart }: LobbyProps) {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [aiDialogOpen]);
+
+  useEffect(() => {
+    if (!rulesOpen) return;
+
+    rulesCloseRef.current?.focus();
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setRulesOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [rulesOpen]);
 
   const startAiGame = () => {
     setAiDialogOpen(false);
@@ -84,6 +102,14 @@ export function Lobby({ onStart }: LobbyProps) {
 
   return (
     <div className="lobby-eventually">
+      <button
+        type="button"
+        className="button button--secondary lobby-rules-button"
+        onClick={() => setRulesOpen(true)}
+      >
+        Rules
+      </button>
+
       <header id="header">
         <h1 className="lobby-logo">
           <img
@@ -156,10 +182,10 @@ export function Lobby({ onStart }: LobbyProps) {
             className="lobby-ai-dialog"
             role="dialog"
             aria-modal="true"
-            aria-labelledby={dialogTitleId}
+            aria-labelledby={aiDialogTitleId}
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 id={dialogTitleId} className="lobby-ai-dialog-title">
+            <h2 id={aiDialogTitleId} className="lobby-ai-dialog-title">
               Play vs AI
             </h2>
             <label className="lobby-difficulty" htmlFor="ai-difficulty">
@@ -191,6 +217,147 @@ export function Lobby({ onStart }: LobbyProps) {
               </button>
               <button type="button" className="button" onClick={startAiGame}>
                 Start
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {rulesOpen && (
+        <div
+          className="lobby-ai-dialog-backdrop"
+          onClick={() => setRulesOpen(false)}
+        >
+          <div
+            className="lobby-ai-dialog lobby-rules-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={rulesDialogTitleId}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id={rulesDialogTitleId} className="lobby-ai-dialog-title">
+              How to Play
+            </h2>
+            <div className="lobby-rules-body">
+              <section>
+                <h3>Goal</h3>
+                <p>
+                  Extreme Checkers is a fast overhead checkers variant on an 8×8
+                  board. Capture or corner your opponent until they have no
+                  pieces left, or no legal moves on their turn. Red moves first.
+                </p>
+              </section>
+
+              <section>
+                <h3>The board</h3>
+                <p>
+                  Pieces only move on the dark squares. Each side starts with
+                  five pieces. In the default rules every piece moves like a
+                  king — one step diagonally in any of the four directions.
+                </p>
+                <p>
+                  Bomb squares are marked with bomb icons. Any piece that{' '}
+                  <em>lands</em> on a bomb is destroyed immediately (the capture
+                  still counts if you jumped someone on the way).
+                </p>
+              </section>
+
+              <section>
+                <h3>How to move</h3>
+                <ul>
+                  <li>
+                    <strong>Click:</strong> select one of your pieces, then click
+                    a green highlighted square.
+                  </li>
+                  <li>
+                    <strong>Drag:</strong> press and drag a piece onto a green
+                    square, then release.
+                  </li>
+                </ul>
+                <p>
+                  Only your pieces are interactive on your turn. Empty green
+                  squares are legal destinations.
+                </p>
+              </section>
+
+              <section>
+                <h3>Slides and jumps</h3>
+                <p>
+                  A <strong>slide</strong> moves one diagonal step onto an empty
+                  dark square.
+                </p>
+                <p>
+                  A <strong>jump</strong> leaps over an adjacent enemy piece onto
+                  the empty square just beyond it (still on a dark diagonal).
+                  The jumped enemy is removed.
+                </p>
+                <p>
+                  Jumping is <strong>optional</strong>. If a capture is available,
+                  you may still slide or move a different piece instead — useful
+                  when a jump would land on a bomb or walk into a trap.
+                </p>
+              </section>
+
+              <section>
+                <h3>Multi-jumps</h3>
+                <p>
+                  After a jump, if that same piece can jump again from its new
+                  square, you must continue the chain. The turn stays yours until
+                  the piece has no further jumps, or until it is destroyed by a
+                  bomb landing.
+                </p>
+                <p>
+                  Mid-chain you cannot switch pieces — only continuation jumps
+                  from the chaining piece are legal.
+                </p>
+              </section>
+
+              <section>
+                <h3>Bombs</h3>
+                <p>
+                  Bombs never move. Landing on one eliminates your piece even if
+                  you just captured. Jumping <em>over</em> an enemy onto a safe
+                  square is fine; only the landing square matters for bombs.
+                </p>
+              </section>
+
+              <section>
+                <h3>Winning</h3>
+                <ul>
+                  <li>Eliminate every opposing piece, or</li>
+                  <li>
+                    Leave the opponent with zero legal moves when it becomes
+                    their turn.
+                  </li>
+                </ul>
+              </section>
+
+              <section>
+                <h3>Game modes</h3>
+                <ul>
+                  <li>
+                    <strong>Local 2-Player</strong> — hot-seat on one device; pass
+                    when the turn indicator flips.
+                  </li>
+                  <li>
+                    <strong>Play vs AI</strong> — you are Red; choose difficulty
+                    before starting.
+                  </li>
+                  <li>
+                    <strong>Online Multiplayer</strong> — create or join a match
+                    through the lobby when a game server is configured.
+                  </li>
+                </ul>
+              </section>
+            </div>
+            <div className="lobby-ai-dialog-actions">
+              <button
+                ref={rulesCloseRef}
+                type="button"
+                className="button"
+                onClick={() => setRulesOpen(false)}
+              >
+                Close
               </button>
             </div>
           </div>
