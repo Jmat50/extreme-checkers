@@ -21,52 +21,6 @@ const RED_PALETTE: BlobPalette = {
   interactive: [205, 55, 45],
 };
 
-const ORANGE_PALETTE: BlobPalette = {
-  c1: [255, 120, 35],
-  c2: [255, 90, 20],
-  c3: [255, 165, 55],
-  c4: [225, 100, 30],
-  c5: [200, 85, 25],
-  interactive: [255, 130, 45],
-};
-
-const PHASE_MS = 3 * 60 * 1000;
-
-function lerp(a: number, b: number, t: number) {
-  return a + (b - a) * t;
-}
-
-function lerpRgb(from: Rgb, to: Rgb, t: number): Rgb {
-  return [lerp(from[0], to[0], t), lerp(from[1], to[1], t), lerp(from[2], to[2], t)];
-}
-
-function lerpPalette(from: BlobPalette, to: BlobPalette, t: number): BlobPalette {
-  return {
-    c1: lerpRgb(from.c1, to.c1, t),
-    c2: lerpRgb(from.c2, to.c2, t),
-    c3: lerpRgb(from.c3, to.c3, t),
-    c4: lerpRgb(from.c4, to.c4, t),
-    c5: lerpRgb(from.c5, to.c5, t),
-    interactive: lerpRgb(from.interactive, to.interactive, t),
-  };
-}
-
-function easeInOut(t: number) {
-  return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-}
-
-function paletteAtTime(elapsedMs: number): BlobPalette {
-  const palettes = [RED_PALETTE, ORANGE_PALETTE];
-  const safeElapsed = Number.isFinite(elapsedMs) ? Math.max(0, elapsedMs) : 0;
-  const cycleMs = PHASE_MS * 2;
-  const cycleT = (safeElapsed % cycleMs) / PHASE_MS;
-  // cycleT is in [0, 2); clamp so float noise never indexes past the palette list.
-  const fromIndex = cycleT < 1 ? 0 : 1;
-  const toIndex = 1 - fromIndex;
-  const localT = easeInOut(cycleT - Math.floor(cycleT));
-  return lerpPalette(palettes[fromIndex], palettes[toIndex], localT);
-}
-
 function applyPalette(palette: BlobPalette) {
   if (!palette?.c1) return;
   const root = document.documentElement;
@@ -82,16 +36,7 @@ export function GradientsBackground() {
   const interactiveRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const startedAt = performance.now();
-    let colorFrame = 0;
-
-    const tickColors = (now: number) => {
-      applyPalette(paletteAtTime(now - startedAt));
-      colorFrame = requestAnimationFrame(tickColors);
-    };
-
-    colorFrame = requestAnimationFrame(tickColors);
-    return () => cancelAnimationFrame(colorFrame);
+    applyPalette(RED_PALETTE);
   }, []);
 
   useEffect(() => {
