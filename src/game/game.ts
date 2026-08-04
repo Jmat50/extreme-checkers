@@ -10,7 +10,12 @@ import {
 } from './logic';
 import { applyAiMove } from './ai';
 
-export { applyAiMove, pickAiMove, AI_DIFFICULTY_DEFAULT } from './ai';
+export {
+  applyAiMove,
+  pickAiMove,
+  aiMistakeChance,
+  AI_DIFFICULTY_DEFAULT,
+} from './ai';
 
 /** boardgame.io rejects moves that return this sentinel (see boardgame.io/core). */
 const INVALID_MOVE = 'INVALID_MOVE';
@@ -132,7 +137,12 @@ export const CheckersGame: Game<CheckersState> = {
       return { ...G, selected: pos, validMoves: filtered };
     },
 
-    playMove({ G, ctx, playerID, events }, move: Move, autoComplete = false) {
+    playMove(
+      { G, ctx, playerID, events },
+      move: Move,
+      autoComplete = false,
+      mistakeChance = 0,
+    ) {
       if (G.winner) return INVALID_MOVE;
       if (!isPlayersTurn(ctx, playerID)) return INVALID_MOVE;
       if (!move || !move.from || !move.to) return INVALID_MOVE;
@@ -145,8 +155,13 @@ export const CheckersGame: Game<CheckersState> = {
       if (!valid) return INVALID_MOVE;
 
       // AI submits with autoComplete: finish the whole jump chain in one move.
+      // Low difficulties may pass mistakeChance so multi-jumps can be misplayed.
       if (autoComplete) {
-        const next = applyAiMove(G, valid);
+        const chance =
+          typeof mistakeChance === 'number' && mistakeChance > 0
+            ? mistakeChance
+            : 0;
+        const next = applyAiMove(G, valid, chance);
         events.endTurn();
         return { ...next, selected: null, validMoves: [], mustContinueFrom: null };
       }

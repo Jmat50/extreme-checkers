@@ -1,10 +1,12 @@
 import { Bot } from 'boardgame.io/ai';
 import type { Ctx, Game, PlayerID, State } from 'boardgame.io';
-import { AI_DIFFICULTY_DEFAULT, pickAiMove } from './ai';
+import { AI_DIFFICULTY_DEFAULT, aiMistakeChance, pickAiMove } from './ai';
 import { getLegalMoves, movesEqual } from './logic';
 import { CheckersState, PLAYER_COLORS, PieceColor } from './types';
 
 export function createCheckersBot(difficulty: number = AI_DIFFICULTY_DEFAULT) {
+  const mistakeChance = aiMistakeChance(difficulty);
+
   return class CheckersBot extends Bot {
     constructor(opts: {
       enumerate: NonNullable<Game['ai']>['enumerate'];
@@ -21,10 +23,26 @@ export function createCheckersBot(difficulty: number = AI_DIFFICULTY_DEFAULT) {
       if (!move) {
         return Promise.resolve({ action: actions[0] });
       }
-      // Must mirror ai.enumerate ordering (getLegalMoves) for index mapping.
+
+      // Enumerate returns MAKE_MOVE actions already; find the matching root hop
+      // then rewrite args so playMove receives mistakeChance for soft chains.
       const allMoves = getLegalMoves(G.board, color, G.mustContinueFrom);
       const index = allMoves.findIndex((m) => movesEqual(m, move));
-      return Promise.resolve({ action: actions[index] ?? actions[0] });
+      const base = actions[index] ?? actions[0];
+      if (!base || !('payload' in base)) {
+        return Promise.resolve({ action: base });
+      }
+
+      const legal = allMoves[index] ?? allMoves[0];
+      return Promise.resolve({
+        action: {
+          ...base,
+          payload: {
+            ...base.payload,
+            args: [legal, true, mistakeChance],
+          },
+        },
+      });
     }
   };
 }

@@ -12,41 +12,112 @@ export const AI_DIFFICULTY_MIN = 1;
 export const AI_DIFFICULTY_MAX = 10;
 export const AI_DIFFICULTY_DEFAULT = 5;
 
-/**
- * Maps 1–10 → search budget.
- * Low levels stay shallow/noisy; high levels deepen until the time cap.
- */
-function difficultyParams(difficulty: number): {
+type DifficultyParams = {
   maxDepth: number;
   timeMs: number;
   randomAmongTop: number;
-} {
+  /** Probability of picking a clearly suboptimal root move / chain hop. */
+  mistakeChance: number;
+  /** How far below the best score a "good" candidate may sit. */
+  margin: number;
+};
+
+/**
+ * Maps 1–10 → search budget + selection noise.
+ * Low levels stay shallow/noisy; high levels deepen until the time cap.
+ */
+function difficultyParams(difficulty: number): DifficultyParams {
   const d = Math.max(
     AI_DIFFICULTY_MIN,
     Math.min(AI_DIFFICULTY_MAX, Math.round(difficulty)),
   );
   switch (d) {
     case 1:
-      return { maxDepth: 0, timeMs: 0, randomAmongTop: 99 };
+      return {
+        maxDepth: 0,
+        timeMs: 0,
+        randomAmongTop: 99,
+        mistakeChance: 1,
+        margin: 0,
+      };
     case 2:
-      return { maxDepth: 0, timeMs: 0, randomAmongTop: 5 };
+      return {
+        maxDepth: 0,
+        timeMs: 0,
+        randomAmongTop: 8,
+        mistakeChance: 0.4,
+        margin: 120,
+      };
     case 3:
-      return { maxDepth: 1, timeMs: 30, randomAmongTop: 3 };
+      return {
+        maxDepth: 1,
+        timeMs: 30,
+        randomAmongTop: 5,
+        mistakeChance: 0.28,
+        margin: 80,
+      };
     case 4:
-      return { maxDepth: 2, timeMs: 60, randomAmongTop: 2 };
+      return {
+        maxDepth: 2,
+        timeMs: 60,
+        randomAmongTop: 4,
+        mistakeChance: 0.16,
+        margin: 50,
+      };
     case 5:
-      return { maxDepth: 3, timeMs: 120, randomAmongTop: 1 };
+      return {
+        maxDepth: 3,
+        timeMs: 120,
+        randomAmongTop: 2,
+        mistakeChance: 0.08,
+        margin: 20,
+      };
     case 6:
-      return { maxDepth: 4, timeMs: 200, randomAmongTop: 1 };
+      return {
+        maxDepth: 4,
+        timeMs: 200,
+        randomAmongTop: 1,
+        mistakeChance: 0.04,
+        margin: 8,
+      };
     case 7:
-      return { maxDepth: 5, timeMs: 350, randomAmongTop: 1 };
+      return {
+        maxDepth: 5,
+        timeMs: 350,
+        randomAmongTop: 1,
+        mistakeChance: 0.02,
+        margin: 8,
+      };
     case 8:
-      return { maxDepth: 6, timeMs: 500, randomAmongTop: 1 };
+      return {
+        maxDepth: 6,
+        timeMs: 500,
+        randomAmongTop: 1,
+        mistakeChance: 0,
+        margin: 8,
+      };
     case 9:
-      return { maxDepth: 7, timeMs: 750, randomAmongTop: 1 };
+      return {
+        maxDepth: 7,
+        timeMs: 750,
+        randomAmongTop: 1,
+        mistakeChance: 0,
+        margin: 8,
+      };
     default:
-      return { maxDepth: 8, timeMs: 1000, randomAmongTop: 1 };
+      return {
+        maxDepth: 8,
+        timeMs: 1000,
+        randomAmongTop: 1,
+        mistakeChance: 0,
+        margin: 8,
+      };
   }
+}
+
+/** Mistake probability used when the bot auto-completes jump chains. */
+export function aiMistakeChance(difficulty: number): number {
+  return difficultyParams(difficulty).mistakeChance;
 }
 
 function opposite(color: PieceColor): PieceColor {
@@ -117,14 +188,16 @@ function finalizeAiTurn(
 }
 
 /**
- * From a mid-chain position, finish the jump by picking continuations that
- * maximize the mover's static eval at the end of the chain.
+ * From a mid-chain position, finish the jump by picking continuations.
+ * With `mistakeChance`, occasionally picks a random hop instead of the
+ * eval-maximizing one. Search always passes 0 so evaluation stays optimal.
  */
 function finishCaptureChain(
   root: CheckersState,
   state: CheckersState,
   mover: PieceColor,
   eliminations: Position[],
+  mistakeChance = 0,
 ): CheckersState {
   if (!state.mustContinueFrom) {
     return finalizeAiTurn(root, state, eliminations);
@@ -137,14 +210,29 @@ function finishCaptureChain(
     return finalizeAiTurn(root, state, eliminations);
   }
 
+  if (mistakeChance > 0 && followUps.length > 1 && Math.random() < mistakeChance) {
+    const next = followUps[Math.floor(Math.random() * followUps.length)];
+    const stepped = executeMove(state, next);
+    return finishCaptureChain(
+      root,
+      stepped,
+      mover,
+      [...eliminations, ...stepped.lastEliminations],
+      mistakeChance,
+    );
+  }
+
   let best: CheckersState | null = null;
   let bestScore = -Infinity;
   for (const next of followUps) {
     const stepped = executeMove(state, next);
-    const leaf = finishCaptureChain(root, stepped, mover, [
-      ...eliminations,
-      ...stepped.lastEliminations,
-    ]);
+    const leaf = finishCaptureChain(
+      root,
+      stepped,
+      mover,
+      [...eliminations, ...stepped.lastEliminations],
+      mistakeChance,
+    );
     const score = evaluatePosition(leaf, mover);
     if (score > bestScore) {
       bestScore = score;
@@ -156,8 +244,13 @@ function finishCaptureChain(
 
 /**
  * Apply a root move and auto-complete any multi-jump for the AI turn.
+ * Pass `mistakeChance > 0` only on the live bot path — search uses the default 0.
  */
-export function applyAiMove(G: CheckersState, move: Move): CheckersState {
+export function applyAiMove(
+  G: CheckersState,
+  move: Move,
+  mistakeChance = 0,
+): CheckersState {
   const mover = G.board[move.from.row][move.from.col]?.color;
   const started = executeMove(
     { ...G, selected: move.from, validMoves: [move] },
@@ -167,7 +260,7 @@ export function applyAiMove(G: CheckersState, move: Move): CheckersState {
   if (!mover || !started.mustContinueFrom) {
     return finalizeAiTurn(G, started, eliminations);
   }
-  return finishCaptureChain(G, started, mover, eliminations);
+  return finishCaptureChain(G, started, mover, eliminations, mistakeChance);
 }
 
 function orderMoves(moves: Move[]): Move[] {
@@ -258,6 +351,18 @@ function scoreRootMoves(
   return scored;
 }
 
+function topBand(
+  scored: { move: Move; score: number }[],
+  randomAmongTop: number,
+  margin: number,
+): { move: Move; score: number }[] {
+  const topN = Math.max(1, Math.min(randomAmongTop, scored.length));
+  const bestScore = scored[0].score;
+  return scored
+    .slice(0, topN)
+    .filter((s) => s.score >= bestScore - margin);
+}
+
 export function pickAiMove(
   G: CheckersState,
   color: PieceColor,
@@ -266,7 +371,8 @@ export function pickAiMove(
   const moves = orderMoves(getLegalMoves(G.board, color, G.mustContinueFrom));
   if (moves.length === 0) return null;
 
-  const { maxDepth, timeMs, randomAmongTop } = difficultyParams(difficulty);
+  const { maxDepth, timeMs, randomAmongTop, mistakeChance, margin } =
+    difficultyParams(difficulty);
 
   if (maxDepth === 0 && randomAmongTop >= moves.length) {
     return moves[Math.floor(Math.random() * moves.length)];
@@ -286,11 +392,23 @@ export function pickAiMove(
     scored = next;
   }
 
-  const topN = Math.max(1, Math.min(randomAmongTop, scored.length));
-  const bestScore = scored[0].score;
-  const margin = maxDepth === 0 ? 40 : 8;
-  const candidates = scored
-    .slice(0, topN)
-    .filter((s) => s.score >= bestScore - margin);
+  const candidates = topBand(scored, randomAmongTop, margin);
+
+  // Occasional blunder: pick uniformly among moves outside the top band.
+  if (mistakeChance > 0 && Math.random() < mistakeChance) {
+    const candidateKeys = new Set(
+      candidates.map(
+        (c) =>
+          `${c.move.from.row},${c.move.from.col}->${c.move.to.row},${c.move.to.col}`,
+      ),
+    );
+    const outside = scored.filter((s) => {
+      const key = `${s.move.from.row},${s.move.from.col}->${s.move.to.row},${s.move.to.col}`;
+      return !candidateKeys.has(key);
+    });
+    const pool = outside.length > 0 ? outside : scored;
+    return pool[Math.floor(Math.random() * pool.length)].move;
+  }
+
   return candidates[Math.floor(Math.random() * candidates.length)].move;
 }

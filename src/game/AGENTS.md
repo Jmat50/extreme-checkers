@@ -38,9 +38,9 @@ Capture generation is **single-step only**. Multi-jumps are hop-by-hop via `must
 
 ## AI search (`ai.ts` / `bot.ts`)
 
-- Difficulty maps to depth + time budget (`difficultyParams`). Search must stay timed so the Local bot does not freeze the tab.
+- Difficulty maps to depth + time budget + `mistakeChance` (`difficultyParams`). Low levels occasionally blunder (suboptimal root move / soft multi-jump); search still uses optimal chains (`mistakeChance: 0`). Search must stay timed so the Local bot does not freeze the tab.
 - Evaluation and search call into `logic.ts` only — no React / DOM.
-- Bot `play()` must never return an empty/undefined action when the game is not over; map `pickAiMove` through the enumerated action list.
+- Bot `play()` must never return an empty/undefined action when the game is not over; submit `playMove(move, true, mistakeChance)` after `pickAiMove`.
 
 ## Softlock checklist (if “I can’t move”)
 
@@ -59,6 +59,7 @@ node scripts/test-ai-jumps.mjs
 node scripts/test-stuck-piece.mjs
 npx tsx scripts/test-turn-burn.ts
 npx tsx scripts/test-jump-rules.ts
+npx tsx scripts/test-ai-mistakes.ts
 ```
 
 Lobby “Play vs AI” opens a difficulty dialog — browser tests must click **Start** after **Play vs AI**.
